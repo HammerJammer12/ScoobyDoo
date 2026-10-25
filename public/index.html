@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+<body>
+  <header class="topbar">
+    <nav id="nav" hidden>
+      <span id="nav-user"></span>
+      <button id="logout-btn" class="link-btn" type="button">Log out</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Logged-out view -->
+    <section id="auth-view" hidden>
+      <div class="card">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-mode="login" role="tab" type="button">Log in</button>
+          <button class="tab" data-mode="signup" role="tab" type="button">Sign up</button>
+        </div>
+        <form id="auth-form" novalidate>
+          <label>Username
+            <input id="username" name="username" autocomplete="username" required>
+          </label>
+          <label>Password
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <!-- TODO: we should probably make the user reenter their password and make sure they match to signup -->
+          <p id="auth-error" class="error" role="alert" hidden></p>
+          <button id="auth-submit" class="primary" type="submit">Log in</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Logged-in view -->
+    <section id="home-view" hidden>
+      <div class="card">
+        <h1 id="welcome"></h1>
+        <p class="muted">You're signed in!</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

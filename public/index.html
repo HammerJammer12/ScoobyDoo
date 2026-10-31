@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Workout app</title>
+</head>
 <body>
   <header class="topbar">
     <nav id="nav" hidden>
@@ -12,26 +14,40 @@
   </header>
 
   <main>
-    <!-- Logged-out view -->
-    <section id="auth-view" hidden>
+    <!-- Public home page -->
+    <section id="landing-view">
+      <h1>Workout app</h1>
+      <p>Plan your workouts and keep track of your goals.</p>
+      <button id="open-auth" type="button">Sign in / Sign up</button>
+    </section>
+
+    <!-- The browser handles the popup and keyboard focus. -->
+    <dialog id="auth-dialog" aria-labelledby="auth-title">
+      <h2 id="auth-title">Sign in or create an account</h2>
+      <button id="close-auth" type="button">Close</button>
       <div class="card">
         <div class="tabs" role="tablist">
           <button class="tab active" data-mode="login" role="tab" type="button">Log in</button>
           <button class="tab" data-mode="signup" role="tab" type="button">Sign up</button>
         </div>
-        <form id="auth-form" novalidate>
+        <form id="auth-form">
           <label>Username
             <input id="username" name="username" autocomplete="username" required>
           </label>
           <label>Password
             <input id="password" name="password" type="password" autocomplete="current-password" required>
           </label>
-          <!-- TODO: we should probably make the user reenter their password and make sure they match to signup -->
+          <div id="signup-fields" hidden>
+            <p>Username: 3–30 letters, numbers, or underscores. Password: at least 8 characters, up to 72 bytes (some characters use more than one byte).</p>
+            <label>Confirm password
+              <input id="confirm-password" type="password" autocomplete="new-password">
+            </label>
+          </div>
           <p id="auth-error" class="error" role="alert" hidden></p>
           <button id="auth-submit" class="primary" type="submit">Log in</button>
         </form>
       </div>
-    </section>
+    </dialog>
 
     <!-- Logged-in view -->
     <section id="home-view" hidden>

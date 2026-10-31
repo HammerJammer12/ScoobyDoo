@@ -72,8 +72,28 @@ set_logs           (log_id, exercise_id, set_no, reps, weight)
 
 goals              (id, user_id, kind, target, exercise_id NULL, deadline NULL, achieved_at NULL)
 
-posts              (id, user_id, log_id NULL, caption, photo_url, created_at)
+posts              (id, author_id, log_id NULL, content, photo_url, created_at)
 ```
+
+### Feed query
+
+Friendships are one row per pair, so a user can be on either side. Check both columns. `UNION` removes duplicates, and the user's own posts are included.
+
+```sql
+SELECT p.id, p.content, p.photo_url, p.created_at, u.username AS author
+FROM posts p
+JOIN users u ON u.id = p.author_id
+WHERE p.author_id = $1
+   OR p.author_id IN (
+     SELECT friend_id FROM friendships WHERE user_id = $1 AND status = 'accepted'
+     UNION
+     SELECT user_id FROM friendships WHERE friend_id = $1 AND status = 'accepted'
+   )
+ORDER BY p.created_at DESC
+LIMIT 20;
+```
+
+`$1` is `req.user.id`. For "load more", add `AND p.created_at < $2` and pass the oldest `created_at` already shown.
 
 The stats only work if we log what was actually done (`set_logs`), not just what was planned (`plan_exercises`). Keep them as separate tables.
 
@@ -95,7 +115,7 @@ New endpoints go in the README API table once they exist.
 | POST | `/api/friends/:username` | Send a friend request |
 | PUT/DELETE | `/api/friends/:username` | Accept, or remove/decline |
 | GET | `/api/feed` | Friends' recent logs and posts |
-| POST | `/api/posts` | Caption + photo |
+| POST | `/api/posts` | Text content + optional photo |
 | GET | `/api/users/:username` | Public profile (respects privacy setting) |
 
 ## Roadmap

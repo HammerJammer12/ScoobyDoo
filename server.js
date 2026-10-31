@@ -9,6 +9,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const SESSION_DAYS = 14; //how long after we expire sessions, helps to prevent sessions table from getting full of junk
 const COOKIE_NAME = 'sid';
+const secureCookies = process.env.NODE_ENV === 'production';
+const authAttempts = new Map();
+const AUTH_WINDOW = 15 * 60 * 1000;
+// A real hash makes unknown usernames take about as long as wrong passwords.
+const dummyHash = bcrypt.hashSync(crypto.randomBytes(32).toString('hex'), 12);
 
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '10kb' }));
@@ -27,7 +32,7 @@ async function startSession(res, userId) {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: true,
+    secure: secureCookies,
     maxAge,
   });
 }
@@ -58,7 +63,18 @@ function requireAuth(req, res, next) {
 }
 
 function authLimiter(req, res, next) {
-  //TODO: limit signin attempts, maybe not a big deal for this project practically but a good practice nonetheless
+  // Count requests from each IP. This simple limit resets on server restart.
+  const now = Date.now();
+  let attempts = authAttempts.get(req.ip);
+  if (!attempts || attempts.resetAt <= now) {
+    attempts = { count: 0, resetAt: now + AUTH_WINDOW };
+    authAttempts.set(req.ip, attempts);
+  }
+  if (attempts.count >= 10) {
+    res.set('Retry-After', String(Math.ceil((attempts.resetAt - now) / 1000)));
+    return res.status(429).json({ error: 'Too many attempts. Try again in 15 minutes.' });
+  }
+  attempts.count += 1;
   next();
 }
 
@@ -73,10 +89,19 @@ app.use(loadUser);
 app.use('/api', requireJson);
 
 app.post('/api/signup', authLimiter, async (req, res) => {
-  const { username, password } = req.body || {};
-  //TODO username/password autnentication, we should decide what requirements usernames and passwords should have.
+  const { username, password, confirmPassword } = req.body || {};
+  // Check on the server too: browser checks can be bypassed.
+  if (typeof username !== 'string' || !/^[A-Za-z0-9_]{3,30}$/.test(username)) {
+    return res.status(400).json({ error: 'Username must be 3–30 letters, numbers, or underscores.' });
+  }
+  if (typeof password !== 'string' || password.length < 8 || Buffer.byteLength(password, 'utf8') > 72) {
+    return res.status(400).json({ error: 'Password must have at least 8 characters and use no more than 72 bytes.' });
+  }
+  if (password !== confirmPassword) {
+    return res.status(400).json({ error: 'Passwords do not match.' });
+  }
 
-  const hash = bcrypt.hashSync(password, 12);
+  const hash = await bcrypt.hash(password, 12);
   try {
     const { rows } = await pool.query(
       'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username, created_at',
@@ -92,6 +117,10 @@ app.post('/api/signup', authLimiter, async (req, res) => {
 
 app.post('/api/login', authLimiter, async (req, res) => {
   const { username, password } = req.body || {};
+  if (typeof username !== 'string' || typeof password !== 'string' ||
+      !username.trim() || !password || Buffer.byteLength(password, 'utf8') > 72) {
+    return res.status(400).json({ error: 'Enter a username and password (password maximum: 72 bytes).' });
+  }
   let user = null;
   if (typeof username === 'string') {
     const { rows } = await pool.query(
@@ -101,8 +130,8 @@ app.post('/api/login', authLimiter, async (req, res) => {
     user = rows[0] || null;
   }
 
-  const hash = user ? user.password_hash : '$2a$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidinva';
-  const ok = typeof password === 'string' && bcrypt.compareSync(password, hash);
+  const hash = user ? user.password_hash : dummyHash;
+  const ok = typeof password === 'string' && await bcrypt.compare(password, hash);
   if (!user || !ok) return res.status(401).json({ error: 'Invalid username or password' });
 
   await startSession(res, user.id);
@@ -123,12 +152,17 @@ app.get('/api/me', requireAuth, (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((err, _req, res, _next) => {
+  if (err.type === 'entity.parse.failed') return res.status(400).json({ error: 'Invalid JSON.' });
+  if (err.type === 'entity.too.large') return res.status(413).json({ error: 'Request is too large.' });
   console.error(err);
   res.status(500).json({ error: 'Server error' });
 });
 
 //deletes sessions with expiration dates in the past, just to prevent db from getting filled with junk
 setInterval(() => {
+  for (const [ip, attempts] of authAttempts) {
+    if (attempts.resetAt <= Date.now()) authAttempts.delete(ip);
+  }
   pool.query('DELETE FROM sessions WHERE expires_at < $1', [Date.now()]).catch(console.error);
 }, 60 * 60 * 1000).unref();
 

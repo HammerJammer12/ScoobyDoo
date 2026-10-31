@@ -29,6 +29,7 @@
 |---|---|---|
 | `DATABASE_URL` | yes | Postgres connection string |
 | `DATABASE_SSL` | on the host | Set to `true` when the database requires SSL. Should be left unset locally |
+| `NODE_ENV` | on the host | Set to `production` when serving over HTTPS so session cookies require HTTPS. Leave unset for local HTTP. |
 | `PORT` | no | Server port, default 3000 |
 
 ## Project structure

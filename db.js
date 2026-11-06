@@ -54,6 +54,19 @@ async function init() {
       tracking_type TEXT NOT NULL CHECK (tracking_type IN ('weight_and_reps', 'reps_only', 'duration', 'distance'))
     );
 
+    -- Library metadata, filled by scripts/seed-exercises.js (ADD COLUMN so existing databases pick these up)
+    ALTER TABLE exercises
+      ADD COLUMN IF NOT EXISTS source_id TEXT UNIQUE,
+      ADD COLUMN IF NOT EXISTS secondary_muscles TEXT[] NOT NULL DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS equipment TEXT,
+      ADD COLUMN IF NOT EXISTS mechanic TEXT,
+      ADD COLUMN IF NOT EXISTS force TEXT,
+      ADD COLUMN IF NOT EXISTS level TEXT,
+      ADD COLUMN IF NOT EXISTS category TEXT,
+      ADD COLUMN IF NOT EXISTS instructions TEXT[] NOT NULL DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS image_paths TEXT[] NOT NULL DEFAULT '{}';
+    CREATE INDEX IF NOT EXISTS idx_exercises_primary_muscle ON exercises(primary_muscle);
+
     CREATE TABLE IF NOT EXISTS workout_templates (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

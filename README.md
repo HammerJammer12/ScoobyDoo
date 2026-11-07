@@ -42,6 +42,8 @@
 server.js     Express authentication, sessions, and file serving
 db.js         Everything sql and database
 scripts/      One-off scripts (exercise seeding)
+lib/          Logic with no database access (plan recommendations)
+test/         Tests, run with npm test
 public/       Front end display logic
 docs/         Project plan (PLAN.md) and Excalidraw diagram
 ```

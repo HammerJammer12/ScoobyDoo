@@ -120,6 +120,8 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
 
+app.use('/api', requireAuth, require('./routes/workouts'))
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((err, _req, res, _next) => {

@@ -36,8 +36,9 @@
 ```
 server.js     Express authentication, sessions, and file serving
 db.js         Everything sql and database
+routes/       Express routers mounted from server.js 
 public/       Front end display logic
-docs/         Project plan (PLAN.md) and Excalidraw diagram
+docs/         Project plan (PLAN.md) and Excalidraw diagrams
 ```
 
 ## API
@@ -48,6 +49,12 @@ docs/         Project plan (PLAN.md) and Excalidraw diagram
 | POST | `/api/login` | Log in |
 | POST | `/api/logout` | Log out |
 | GET | `/api/me` | Current user (401 if logged out) |
+| GET | `/api/settings` | Username, privacy setting and join date for the settings page |
+| PATCH | `/api/settings/username` | Change username (`{ username }`, 409 if taken) |
+| PATCH | `/api/settings/password` | Change password (`{ currentPassword, newPassword, confirmPassword }`), logs out other sessions |
+| PATCH | `/api/settings/privacy` | Set profile visibility (`{ isPrivate }`, friends-only by default) |
+| POST | `/api/settings/logout-others` | End every session except the current one |
+| DELETE | `/api/settings/account` | Delete the account (`{ password }`) and everything that belongs to it |
 
 
 

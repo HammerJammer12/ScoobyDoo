@@ -14,17 +14,61 @@
     return data;
   }
 
+  const workoutView = window.createWorkoutView(api);
+  const feedView = window.createFeedView(api);
+  const dailyLiftView = window.createWorkoutView(api, { daily: true });
+  let currentUser = null;
+  let sessionVersion = 0;
+
+  function showFeed() {
+    if (!currentUser) return;
+    $('home-view').hidden = false;
+    $('profile-view').hidden = true;
+    $('view-profile').hidden = false;
+    $('back-to-feed').hidden = true;
+  }
+
+  $('view-profile').addEventListener('click', () => {
+    if (!currentUser) return;
+    $('home-view').hidden = true;
+    $('profile-view').hidden = false;
+    $('view-profile').hidden = true;
+    $('back-to-feed').hidden = false;
+    $('profile-username').textContent = `@${currentUser.username}`;
+    const today = new Date();
+    $('profile-day').textContent = today.toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
+    $('profile-day').dateTime = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    feedView.renderProfile();
+    dailyLiftView.load([$('profile-recommendation')]);
+    $('profile-title').scrollIntoView({ block: 'start' });
+  });
+  $('back-to-feed').addEventListener('click', showFeed);
+
   function showUser(user) {
+    currentUser = user;
+    const activeVersion = ++sessionVersion;
     $('auth-dialog').close();
     $('landing-view').hidden = true;
     $('home-view').hidden = false;
     $('nav').hidden = false;
     $('nav-user').textContent = user.username;
     $('welcome').textContent = `Welcome, ${user.username}`;
+    $('create-post-floating').hidden = false;
+    showFeed();
+    feedView.load(user).then((slots) => {
+      if (activeVersion === sessionVersion) workoutView.load(slots);
+    });
   }
 
   function showLanding() {
+    currentUser = null;
+    sessionVersion += 1;
+    dailyLiftView.clear();
+    workoutView.clear();
+    feedView.clear();
     $('home-view').hidden = true;
+    $('profile-view').hidden = true;
+    $('create-post-floating').hidden = true;
     $('nav').hidden = true;
     $('landing-view').hidden = false;
   }
@@ -38,7 +82,11 @@
     $('password').value = '';
     $('password').minLength = signingUp ? 8 : 1;
     $('username').pattern = signingUp ? '[A-Za-z0-9_]{3,30}' : '.*';
-    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.mode === next));
+    document.querySelectorAll('.tab').forEach((t) => {
+      const active = t.dataset.mode === next;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-pressed', String(active));
+    });
     $('password').autocomplete = next === 'signup' ? 'new-password' : 'current-password';
     $('auth-submit').textContent = next === 'signup' ? 'Create account' : 'Log in';
     $('auth-error').hidden = true;

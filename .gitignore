@@ -2,3 +2,5 @@ node_modules/
 app.db*
 .env
 .DS_Store
+
+.local/

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings</title>
+  <style>
+    /* Page-only styles until we have a shared stylesheet (#3). */
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f8f9fa; color: #1e1e1e; }
+    main { max-width: 620px; margin: 0 auto; padding: 16px; }
+    .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
+    .card h2 { margin: 0 0 12px; font-size: 1.2rem; }
+    label { display: block; margin-bottom: 12px; font-size: 0.9rem; }
+    input[type="text"], input[type="password"] { display: block; width: 100%; max-width: 320px; box-sizing: border-box; padding: 8px; margin-top: 4px; font: inherit; }
+    .radio { display: flex; gap: 8px; align-items: center; }
+    .hint { color: #6c757d; font-size: 0.85rem; margin: 0 0 12px; }
+    .msg { font-size: 0.9rem; margin: 8px 0 0; }
+    .msg.error { color: #e03131; }
+    .msg.ok { color: #2f9e44; }
+    button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid #adb5bd; background: #e9ecef; cursor: pointer; }
+    button.primary { background: #1971c2; border-color: #1971c2; color: #fff; }
+    button.danger { background: #e03131; border-color: #e03131; color: #fff; }
+    button:disabled { opacity: 0.6; cursor: default; }
+    .card.danger-zone { border-color: #ffa8a8; background: #fff5f5; }
+    .card.danger-zone h2 { color: #e03131; }
+    dialog { border: 1px solid #ffa8a8; border-radius: 8px; max-width: 400px; width: calc(100% - 32px); }
+    .actions { display: flex; gap: 8px; }
+  </style>
+</head>
+<body>
+<main>
+  <p><a href="/">&larr; Home</a></p>
+  <h1>Settings</h1>
+
+  <section class="card">
+    <h2>Account</h2>
+    <form id="username-form">
+      <label>Username
+        <input id="username" type="text" autocomplete="username" required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+">
+      </label>
+      <p class="hint">3–30 letters, numbers, or underscores. <span id="member-since"></span></p>
+      <button class="primary" type="submit">Save</button>
+      <p class="msg" role="status" hidden></p>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Password</h2>
+    <form id="password-form">
+      <label>Current password
+        <input id="current-password" type="password" autocomplete="current-password" required>
+      </label>
+      <label>New password
+        <input id="new-password" type="password" autocomplete="new-password" required minlength="8">
+      </label>
+      <label>Confirm new password
+        <input id="confirm-password" type="password" autocomplete="new-password" required minlength="8">
+      </label>
+      <p class="hint">At least 8 characters. Your other devices will be logged out.</p>
+      <button class="primary" type="submit">Change password</button>
+      <p class="msg" role="status" hidden></p>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Privacy</h2>
+    <form id="privacy-form">
+      <p>Who can see my profile, stats and posts?</p>
+      <label class="radio"><input type="radio" name="privacy" value="private"> Friends only</label>
+      <label class="radio"><input type="radio" name="privacy" value="public"> Public: anyone with the link</label>
+      <button class="primary" type="submit">Save</button>
+      <p class="msg" role="status" hidden></p>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Sessions</h2>
+    <form id="sessions-form">
+      <button type="submit">Log out of all other devices</button>
+      <p class="msg" role="status" hidden></p>
+    </form>
+  </section>
+
+  <section class="card danger-zone">
+    <h2>Danger zone</h2>
+    <p class="hint">Deleting your account removes all your workouts, plans and posts. This can't be undone.</p>
+    <button class="danger" id="open-delete" type="button">Delete account…</button>
+  </section>
+
+  <dialog id="delete-dialog" aria-labelledby="delete-title">
+    <form id="delete-form">
+      <h2 id="delete-title">Delete your account?</h2>
+      <label>Enter your password to confirm
+        <input id="delete-password" type="password" autocomplete="current-password" required>
+      </label>
+      <p class="msg" role="status" hidden></p>
+      <div class="actions">
+        <button type="button" id="cancel-delete">Cancel</button>
+        <button class="danger" type="submit">Delete forever</button>
+      </div>
+    </form>
+  </dialog>
+</main>
+<script src="settingsPage.js"></script>
+</body>
+</html>

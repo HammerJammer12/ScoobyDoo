@@ -15,6 +15,7 @@ async function init() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
     CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower ON users (lower(username));
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT true;
 
     CREATE TABLE IF NOT EXISTS sessions (
       token TEXT PRIMARY KEY,

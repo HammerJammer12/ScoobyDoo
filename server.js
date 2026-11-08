@@ -149,6 +149,9 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
 
+app.use('/api/workouts', requireAuth, require('./routes/workout-views'));
+app.use('/api', requireAuth, require('./routes/posts'));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((err, _req, res, _next) => {

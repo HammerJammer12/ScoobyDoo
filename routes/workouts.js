@@ -24,8 +24,6 @@ function validateBody(body) {
 
   if (body.name.length > 100) return 'Workout name is too long (max 100)';
 
-  if (body.startedAt != null && Number.isNaN(Date.parse(body.startedAt))) return 'startedAt is not a valid date';
-
   if (!Array.isArray(body.exercises) || body.exercises.length === 0) return 'Add at least one exercise';
 
   if (body.exercises.length > MAX_EXERCISES) return `Too many exercises (max ${MAX_EXERCISES})`;
@@ -64,7 +62,7 @@ router.get('/exercises', wrap(async (_req, res) => {
 router.post('/workouts', wrap(async (req, res) => {
   const err = validateBody(req.body);
   if (err) return res.status(400).json({ error: err });
-  const { name, startedAt, exercises } = req.body;
+  const { name, exercises } = req.body;
 
   const ids = [...new Set(exercises.map((e) => e.exerciseId))];
   const found = await pool.query(

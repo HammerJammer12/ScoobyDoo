@@ -13,7 +13,7 @@
     ],
   };
 
-  let exercises = []; // TODO connect to exercises api
+  let exercises = [];
 
   async function api(method, url, body) {
     const res = await fetch(url, {
@@ -151,7 +151,6 @@
     try {
       await api('POST', '/api/workouts', {
         name: $('w-name').value.trim(),
-        startedAt: new Date().toISOString(),
         exercises: collect(),
       });
       $('status').textContent = 'Workout saved.';

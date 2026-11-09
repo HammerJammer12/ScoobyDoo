@@ -10,31 +10,102 @@
       credentials: 'same-origin',
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), { status: res.status });
+    if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
   }
 
+  const workoutView = window.createWorkoutView(api);
+  const feedView = window.createFeedView(api);
+  const dailyLiftView = window.createWorkoutView(api, { daily: true });
+  let currentUser = null;
+  let sessionVersion = 0;
+
+  function showFeed() {
+    if (!currentUser) return;
+    $('home-view').hidden = false;
+    $('profile-view').hidden = true;
+    $('view-profile').hidden = false;
+    $('back-to-feed').hidden = true;
+  }
+
+  $('view-profile').addEventListener('click', () => {
+    if (!currentUser) return;
+    $('home-view').hidden = true;
+    $('profile-view').hidden = false;
+    $('view-profile').hidden = true;
+    $('back-to-feed').hidden = false;
+    $('profile-username').textContent = `@${currentUser.username}`;
+    const today = new Date();
+    $('profile-day').textContent = today.toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
+    $('profile-day').dateTime = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    feedView.renderProfile();
+    dailyLiftView.load([$('profile-recommendation')]);
+    $('profile-title').scrollIntoView({ block: 'start' });
+  });
+  $('back-to-feed').addEventListener('click', showFeed);
+
   function showUser(user) {
-    $('auth-view').hidden = true;
+    currentUser = user;
+    const activeVersion = ++sessionVersion;
+    $('auth-dialog').close();
+    $('landing-view').hidden = true;
     $('home-view').hidden = false;
     $('nav').hidden = false;
     $('nav-user').textContent = user.username;
     $('welcome').textContent = `Welcome, ${user.username}`;
+    $('create-post-floating').hidden = false;
+    showFeed();
+    feedView.load(user).then((slots) => {
+      if (activeVersion === sessionVersion) workoutView.load(slots);
+    });
   }
 
-  function showAuth() {
+  function showLanding() {
+    currentUser = null;
+    sessionVersion += 1;
+    dailyLiftView.clear();
+    workoutView.clear();
+    feedView.clear();
     $('home-view').hidden = true;
+    $('profile-view').hidden = true;
+    $('create-post-floating').hidden = true;
     $('nav').hidden = true;
-    $('auth-view').hidden = false;
+    $('landing-view').hidden = false;
   }
 
   function setMode(next) {
     mode = next;
-    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.mode === next));
+    const signingUp = next === 'signup';
+    $('signup-fields').hidden = !signingUp;
+    $('confirm-password').required = signingUp;
+    $('confirm-password').value = '';
+    $('password').value = '';
+    $('password').minLength = signingUp ? 8 : 1;
+    $('username').pattern = signingUp ? '[A-Za-z0-9_]{3,30}' : '.*';
+    document.querySelectorAll('.tab').forEach((t) => {
+      const active = t.dataset.mode === next;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-pressed', String(active));
+    });
     $('password').autocomplete = next === 'signup' ? 'new-password' : 'current-password';
     $('auth-submit').textContent = next === 'signup' ? 'Create account' : 'Log in';
     $('auth-error').hidden = true;
   }
+
+  $('open-auth').addEventListener('click', () => {
+    setMode('login');
+    $('auth-dialog').showModal();
+    $('username').focus();
+  });
+
+  $('close-auth').addEventListener('click', () => {
+    $('auth-dialog').close();
+  });
+
+  $('auth-dialog').addEventListener('close', () => {
+    $('auth-form').reset();
+    $('auth-error').hidden = true;
+  });
 
   document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => setMode(t.dataset.mode)));
 
@@ -44,8 +115,16 @@
     const err = $('auth-error');
     err.hidden = true;
     btn.disabled = true;
+    btn.textContent = mode === 'signup' ? 'Creating account…' : 'Signing in…';
+    document.querySelectorAll('.tab').forEach((tab) => { tab.disabled = true; });
     try {
       const payload = { username: $('username').value.trim(), password: $('password').value };
+      if (mode === 'signup') {
+        payload.confirmPassword = $('confirm-password').value;
+        if (payload.password !== payload.confirmPassword) {
+          throw new Error('Passwords do not match.');
+        }
+      }
       const { user } = await api('POST', mode === 'signup' ? '/api/signup' : '/api/login', payload);
       $('auth-form').reset();
       showUser(user);
@@ -54,12 +133,21 @@
       err.hidden = false;
     } finally {
       btn.disabled = false;
+      btn.textContent = mode === 'signup' ? 'Create account' : 'Log in';
+      document.querySelectorAll('.tab').forEach((tab) => { tab.disabled = false; });
     }
   });
 
   $('logout-btn').addEventListener('click', async () => {
-    try { await api('POST', '/api/logout', {}); } finally { showAuth(); setMode('login'); }
+    try {
+      await api('POST', '/api/logout', {});
+      showLanding();
+      setMode('login');
+    } catch (error) {
+      alert('Could not log out. Please try again.');
+    }
   });
 
-  api('GET', '/api/me').then(({ user }) => showUser(user)).catch(showAuth);
+  setMode('login');
+  api('GET', '/api/me').then(({ user }) => showUser(user)).catch(showLanding);
 })();

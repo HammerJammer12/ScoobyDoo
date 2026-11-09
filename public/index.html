@@ -3,45 +3,141 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Workout app</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
 <body>
   <header class="topbar">
-    <nav id="nav" hidden>
+    <a class="brand" href="/">Workout app</a>
+    <nav id="nav" aria-label="Account" hidden>
       <span id="nav-user"></span>
+      <button id="view-profile" type="button">View profile</button>
+      <button id="back-to-feed" type="button" hidden>Back to feed</button>
       <button id="logout-btn" class="link-btn" type="button">Log out</button>
     </nav>
   </header>
 
   <main>
-    <!-- Logged-out view -->
-    <section id="auth-view" hidden>
-      <div class="card">
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-mode="login" role="tab" type="button">Log in</button>
-          <button class="tab" data-mode="signup" role="tab" type="button">Sign up</button>
+    <!-- Public home page -->
+    <section id="landing-view">
+      <h1>Your workouts, in one place.</h1>
+      <p>Share your training, follow friends, and find your next lift.</p>
+      <button id="open-auth" type="button">Sign in / Sign up</button>
+    </section>
+
+    <!-- The browser handles the popup and keyboard focus. -->
+    <dialog id="auth-dialog" aria-labelledby="auth-title">
+      <div class="section-heading">
+        <h2 id="auth-title">Sign in or create an account</h2>
+        <button id="close-auth" type="button">Close</button>
+      </div>
+      <div>
+        <div class="tabs" role="group" aria-label="Sign-in options">
+          <button class="tab active" data-mode="login" aria-pressed="true" type="button">Log in</button>
+          <button class="tab" data-mode="signup" aria-pressed="false" type="button">Sign up</button>
         </div>
-        <form id="auth-form" novalidate>
+        <form id="auth-form">
           <label>Username
             <input id="username" name="username" autocomplete="username" required>
           </label>
           <label>Password
             <input id="password" name="password" type="password" autocomplete="current-password" required>
           </label>
-          <!-- TODO: we should probably make the user reenter their password and make sure they match to signup -->
+          <div id="signup-fields" hidden>
+            <p>Username: 3–30 letters, numbers, or underscores. Password: at least 8 characters, up to 72 bytes (some characters use more than one byte).</p>
+            <label>Confirm password
+              <input id="confirm-password" type="password" autocomplete="new-password">
+            </label>
+          </div>
           <p id="auth-error" class="error" role="alert" hidden></p>
           <button id="auth-submit" class="primary" type="submit">Log in</button>
         </form>
       </div>
-    </section>
+    </dialog>
 
     <!-- Logged-in view -->
     <section id="home-view" hidden>
-      <div class="card">
-        <h1 id="welcome"></h1>
-        <p class="muted">You're signed in!</p>
+      <div class="home-heading">
+        <h1>Home</h1>
+        <p id="welcome" class="muted"></p>
+      </div>
+      <div class="social-layout">
+        <section class="feed-column" aria-labelledby="feed-title">
+          <div class="feed-compose">
+            <div class="avatar" aria-hidden="true">You</div>
+            <div class="compose-prompt">
+              <p>What did you train today?</p>
+              <span class="muted">Share a workout or a small win.</span>
+            </div>
+            <button id="create-post-top" class="primary" type="button">Create post</button>
+          </div>
+          <div class="feed-heading">
+            <h2 id="feed-title">Your feed</h2>
+            <span class="sample-label">Community &amp; workouts</span>
+          </div>
+          <p id="feed-status" class="muted" role="status">Updates from everyone.</p>
+          <div id="friends-feed"></div>
+        </section>
+
       </div>
     </section>
+
+    <section id="profile-view" class="profile-view" hidden aria-labelledby="profile-title">
+      <div class="home-heading">
+        <h1 id="profile-title">My profile</h1>
+        <p id="profile-username" class="muted"></p>
+      </div>
+      <section class="feed-column profile-daily-lift" aria-labelledby="daily-lift-title">
+        <div class="feed-heading">
+          <h2 id="daily-lift-title">Recommended lift of the day</h2>
+          <time id="profile-day" class="sample-label"></time>
+        </div>
+        <div id="profile-recommendation"></div>
+      </section>
+      <section class="feed-column" aria-labelledby="profile-posts-title">
+        <div class="feed-heading">
+          <h2 id="profile-posts-title">Your posts</h2>
+          <button id="create-post-profile" class="primary" type="button">Create post</button>
+        </div>
+        <p class="profile-note muted">Your workout updates.</p>
+        <p id="profile-empty" class="profile-note muted">No posts yet. Share your first workout update.</p>
+        <p id="profile-status" class="profile-note muted" role="status"></p>
+        <div id="profile-posts"></div>
+      </section>
+    </section>
+
+    <button id="create-post-floating" class="primary floating-post" type="button" hidden>
+      <span aria-hidden="true">＋</span> Create post
+    </button>
+
+    <dialog id="post-dialog" aria-labelledby="post-title">
+      <form id="post-form">
+        <div class="section-heading">
+          <h2 id="post-title">Create post</h2>
+          <button id="close-post" type="button">Cancel</button>
+        </div>
+        <p class="muted">Share an update with the community.</p>
+        <label for="post-content">Your update</label>
+        <textarea id="post-content" name="content" rows="5" maxlength="1000" placeholder="A new PR, a good session, or a lift you’re working on…" required></textarea>
+        <fieldset class="post-workout-picker">
+          <legend>Tag a body part <span class="muted">(optional)</span></legend>
+          <input id="post-body-part" name="bodyPart" type="hidden" value="">
+          <div id="post-tag-options" class="workout-tag-options"></div>
+          <div id="post-tag-preview" aria-live="polite"></div>
+        </fieldset>
+        <p id="post-error" class="error" role="alert" hidden></p>
+        <div class="post-form-footer">
+          <span id="post-count" class="muted">0 / 1,000</span>
+          <button id="post-submit" class="primary" type="submit">Post</button>
+        </div>
+        <p class="preview-note muted">Your post will be shared with all users.</p>
+      </form>
+    </dialog>
   </main>
 
+  <script src="/lift-tags.js"></script>
+  <script src="/workouts.js"></script>
+  <script src="/feed.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

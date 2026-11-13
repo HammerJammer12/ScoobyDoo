@@ -14,19 +14,56 @@
     return data;
   }
 
+  
   function showUser(user) {
     $('auth-view').hidden = true;
     $('home-view').hidden = false;
     $('nav').hidden = false;
+
     $('nav-user').textContent = user.username;
     $('welcome').textContent = `Welcome, ${user.username}`;
+
+    showPage('home');
   }
+
 
   function showAuth() {
     $('home-view').hidden = true;
     $('nav').hidden = true;
     $('auth-view').hidden = false;
   }
+
+  function showPage(page) {
+    document.querySelectorAll('.page').forEach((section) => {
+      section.hidden = true;
+    });
+
+    const selectedPage = $(`${page}-view`);
+
+    if (!selectedPage) return;
+    selectedPage.hidden = false;
+
+    // Update navigation link
+    document.querySelectorAll('.nav-link').forEach((link) => {
+      link.classList.toggle(
+        'active',
+        link.dataset.page === page
+      );
+    });
+  }
+
+  // Handle navigation clicks
+  document.querySelectorAll('.nav-link').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      const page = link.dataset.page;
+      showPage(page);
+
+      window.location.hash = page;
+    });
+  });
+
 
   function setMode(next) {
     mode = next;

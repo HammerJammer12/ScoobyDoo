@@ -55,13 +55,68 @@ test('PostgreSQL posts, tags, feed visibility, and likes', { skip: !databaseUrl 
       return { status: response.status, data: await response.json() };
     };
     await t.test('requires authentication and scopes workout reads to the owner', async () => {
-      for (const path of ['/api/feed', '/api/posts/me', '/api/workouts']) assert.equal((await request(path, { user: null })).status, 401);
+      for (const path of ['/api/feed', '/api/posts/me', '/api/workouts', '/api/dashboard']) assert.equal((await request(path, { user: null })).status, 401);
       assert.equal((await request('/api/posts', { user: null, method: 'POST', body: { content: 'test' } })).status, 401);
       const list = await request('/api/workouts');
       assert.equal(list.data.source, 'database');
       assert.deepEqual(list.data.workouts.map(w => w.id), [String(workoutIds[0])]);
       assert.equal((await request(`/api/workouts/${workoutIds[1]}`)).status, 404);
       assert.deepEqual((await request(`/api/workouts/${workoutIds[0]}`)).data.workout.sets, []);
+    });
+    await t.test('dashboard counts and latest three saved workouts are scoped to the signed-in user', async () => {
+      const added = [];
+      for (const name of ['Session A', 'Session B', 'Session C']) {
+        const { rows: [workout] } = await db.pool.query('INSERT INTO workouts (user_id,name) VALUES ($1,$2) RETURNING id', [users[0].id, name]);
+        added.push(workout.id);
+      }
+      const { rows: [set] } = await db.pool.query(`INSERT INTO workout_sets (workout_exercise_id,set_number,weight_kgs,reps)
+        SELECT id,1,20,10 FROM workout_exercises WHERE workout_id=$1 RETURNING id`, [workoutIds[0]]);
+      await db.pool.query("INSERT INTO personal_records (user_id,exercise_id,set_id,record_type,value) VALUES ($1,1,$2,'max_weight',20)", [users[0].id, set.id]);
+      try {
+        const dashboard = await request('/api/dashboard');
+        assert.equal(dashboard.status, 200);
+        assert.deepEqual(dashboard.data.summary, { saved_workouts: 4, logged_sets: 1, personal_records: 1 });
+        assert.deepEqual(dashboard.data.recentWorkouts.map(w => w.id), [...added].reverse().map(String));
+        assert.equal(dashboard.data.recentOrder, 'save-order');
+        assert.equal(dashboard.data.recentAchievements.length, 1);
+        assert.equal(dashboard.data.recentAchievements[0].exercise_name, 'Dumbbell Curl');
+        assert.equal(dashboard.data.recentAchievements[0].value, 20);
+        const other = (await request('/api/dashboard', { user: 1 })).data;
+        assert.deepEqual(other.summary, { saved_workouts: 1, logged_sets: 0, personal_records: 0 });
+        assert.deepEqual(other.recentWorkouts.map(w => w.id), [String(workoutIds[1])]);
+        assert.deepEqual(other.recentAchievements, []);
+      } finally {
+        await db.pool.query('DELETE FROM personal_records WHERE set_id=$1', [set.id]);
+        await db.pool.query('DELETE FROM workout_sets WHERE id=$1', [set.id]);
+        await db.pool.query('DELETE FROM workouts WHERE id=ANY($1::integer[])', [added]);
+      }
+    });
+    await t.test('planner saves weekly and leap-month plans, enforces ownership, and validates calendar days', async () => {
+      assert.equal((await request('/api/plans', { user: null })).status, 401);
+      const weekly = { name: 'My week', type: 'weekly', startDate: '2026-11-09', days: Array.from({length:7}, () => []) };
+      weekly.days[0] = [String(workoutIds[0])];
+      const saved = await request('/api/plans', { method: 'POST', body: weekly });
+      assert.equal(saved.status, 201);
+      const path = `/api/plans/${saved.data.id}`;
+      const reopened = (await request(path)).data.plan;
+      assert.deepEqual(reopened.days, weekly.days);
+      assert.equal(reopened.startDate, weekly.startDate);
+      assert.equal((await request('/api/plans')).data.plans.length, 1);
+      assert.deepEqual((await request('/api/plans', { user: 1 })).data.plans, []);
+      assert.equal((await request(path, { user: 1 })).status, 404);
+      assert.equal((await request(path, { user: 1, method:'PUT', body: {...weekly, days: Array.from({length:7}, () => [])} })).status, 404);
+      const monthly = { name:'February', type:'monthly', startDate:'2028-02-01', days:Array.from({length:29}, () => []) };
+      monthly.days[28] = [String(workoutIds[0])];
+      assert.equal((await request(path, { method:'PUT', body:monthly })).status, 200);
+      assert.equal((await request(path)).data.plan.days.length, 29);
+      for (const body of [
+        {...weekly, name:' '}, {...weekly, startDate:'2026-11-10'}, {...weekly, startDate:'2026-02-30'},
+        {...weekly, days:[]}, {...weekly, days:[[workoutIds[1]],...weekly.days.slice(1)]},
+        {...weekly, days:[[true],...weekly.days.slice(1)]},
+        {...monthly, days:monthly.days.slice(0,28)}, {...monthly, startDate:'2028-02-02'}
+      ]) assert.equal((await request(path, {method:'PUT',body})).status, 400);
+      assert.equal((await request(path)).data.plan.name, 'February');
+      await db.pool.query('DELETE FROM workout_plans WHERE id=$1', [saved.data.id]);
     });
     let taggedPost;
     await t.test('saves tagged and untagged posts in PostgreSQL; rejects foreign tags and invalid content', async () => {
@@ -108,6 +163,9 @@ test('PostgreSQL posts, tags, feed visibility, and likes', { skip: !databaseUrl 
     await t.test('body-part tags save for accounts with no workouts and reject unsupported tags', async () => {
       await db.pool.query('DELETE FROM workouts WHERE user_id=$1', [users[2].id]);
       assert.equal((await request('/api/workouts', { user: 2 })).data.workouts.length, 0);
+      const emptyDashboard = (await request('/api/dashboard', { user: 2 })).data;
+      assert.deepEqual(emptyDashboard.summary, { saved_workouts: 0, logged_sets: 0, personal_records: 0 });
+      assert.deepEqual(emptyDashboard.recentWorkouts, []);
       for (const bodyPart of ['arms', 'legs', 'back', 'chest']) {
         const result = await request('/api/posts', { user: 2, method: 'POST', body: { content: `Training ${bodyPart}`, bodyPart } });
         assert.equal(result.status, 201);

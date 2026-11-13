@@ -1,5 +1,5 @@
 // Recommendations use the same API as the original workout view.
-window.createWorkoutView = (api, { daily = false } = {}) => {
+window.createWorkoutView = (api, { daily = false, prefix = daily ? 'daily' : 'feed' } = {}) => {
   let generation = 0;
   let slots = [];
 
@@ -38,7 +38,7 @@ window.createWorkoutView = (api, { daily = false } = {}) => {
     button.textContent = 'View lift details';
     button.setAttribute('aria-expanded', 'false');
     const details = document.createElement('div');
-    details.id = `${daily ? 'daily' : 'feed'}-details-${workout.id}`;
+    details.id = `${prefix}-details-${workout.id}`;
     details.className = 'recommendation-details';
     details.setAttribute('aria-live', 'polite');
     details.hidden = true;

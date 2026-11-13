@@ -53,6 +53,7 @@ docs/         Project plan (PLAN.md) and Excalidraw diagram
 | POST | `/api/login` | Log in |
 | POST | `/api/logout` | Log out |
 | GET | `/api/me` | Current user (401 if logged out) |
+| GET | `/api/dashboard` | Own saved-workout, logged-set, and PR counts, plus latest 3 saved workouts |
 | GET | `/api/workouts` | Signed-in user's saved workouts |
 | GET | `/api/workouts/:id` | Own workout with muscle metadata and recorded sets |
 | GET | `/api/feed` | Latest 50 posts from self and accepted friends |
@@ -75,6 +76,22 @@ The temporary behavior is isolated in `db.js` under `auto_friend_new_user` and
 the accompanying startup backfill for later replacement with friend requests.
 
 ## PostgreSQL storage
+
+After login, Dashboard is the default view. Community contains the social feed,
+posting, tags, and likes; Profile contains the user's posts. Posts display calendar
+dates only, while their full timestamps remain in PostgreSQL for sorting.
+
+The dashboard follows the supplied wireframe: left navigation rail, underlined
+date header, notification strip, today's workout beside three goal circles,
+stacked recent activities beside achievements, and a progress button underneath.
+View all opens saved workout history; Check your progress opens the user's real
+totals. Unconnected Planner, Track workout, Settings, and Start workout controls
+are disabled placeholders. On screens up to 512px, the navigation uses a hamburger.
+
+The dashboard uses real counts from the signed-in user's records and suggests a
+lift from their saved workouts. Its three recent entries are ordered by save ID,
+clearly labeled as save order until workout dates are added. Goals and scheduled
+plans show an empty/connection state; no progress percentages or dates are invented.
 
 Posts, tags, likes, users, sessions, workouts, and friendships live in PostgreSQL.
 There is no in-memory fallback. Empty databases show empty states. Posts and likes
@@ -139,3 +156,23 @@ They require schema-creation permission and are skipped without `TEST_DATABASE_U
 - Schema changes go in `db.js` using `CREATE TABLE IF NOT EXISTS`
 - Don't commit secrets, `.env`, or `node_modules`.
 - Keep Project Structure in this doc updated, hopefully makes changes easier going forward
+
+### Workout planner
+
+Planner now supports a Monday–Sunday seven-day plan and a full-month calendar,
+following the supplied wireframe. Add up to ten of your saved workouts to each
+day, remove entries, name and save a plan, and reopen it with **Load plan**.
+Empty days are rest days. Workout dots use the Arms/Legs/Back/Chest colors, with
+gray for other muscle groups. On narrow screens, the calendar scrolls horizontally.
+Changing the plan type or start date creates a new empty plan and asks before
+replacing unsaved edits. While viewing a monthly plan, **Load plan** also lets you
+repeat a saved weekly pattern across that month; monthly plans cannot overwrite
+a weekly pattern through this copy action.
+
+Authenticated `GET /api/plans`, `GET /api/plans/:id`, `POST /api/plans`, and
+`PUT /api/plans/:id` use the PostgreSQL `workout_plans` table. Each plan stores its
+owner, name, type, start date, and ordered day arrays of workout IDs in JSONB.
+Saves validate dates, day counts and workout ownership in a transaction. A workout
+removed after saving is shown as unavailable and must be removed from the plan
+before saving again. Plans schedule workouts; they do not create completed workout
+logs or yet replace the dashboard's suggested lift.

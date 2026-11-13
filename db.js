@@ -75,6 +75,17 @@ async function init() {
       name TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS workout_plans (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL CHECK (char_length(trim(name)) BETWEEN 1 AND 80),
+      type TEXT NOT NULL CHECK (type IN ('weekly', 'monthly')),
+      start_date DATE NOT NULL,
+      days JSONB NOT NULL CHECK (jsonb_typeof(days) = 'array'),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS idx_workout_plans_user ON workout_plans(user_id);
+
     CREATE TABLE IF NOT EXISTS workout_exercises (
       id SERIAL PRIMARY KEY,
       workout_id INTEGER NOT NULL REFERENCES workouts(id) ON DELETE CASCADE,
@@ -239,4 +250,27 @@ async function setPostLike(userId, id, liked) {
   return (await getPosts(userId, { id }))[0] || null;
 }
 
-module.exports = { pool, init, getWorkouts, getWorkout, getPosts, createPost, setPostLike };
+async function getDashboard(userId) {
+  const { rows: [summary] } = await pool.query(`
+    SELECT
+      (SELECT count(*)::integer FROM workouts WHERE user_id = $1) AS saved_workouts,
+      (SELECT count(*)::integer FROM workout_sets s
+        JOIN workout_exercises we ON we.id = s.workout_exercise_id
+        JOIN workouts w ON w.id = we.workout_id WHERE w.user_id = $1) AS logged_sets,
+      (SELECT count(*)::integer FROM personal_records WHERE user_id = $1) AS personal_records`, [userId]);
+  // There is no workout-date column yet. IDs reflect save order, not session dates.
+  const { rows: recentWorkouts } = await pool.query(`
+    SELECT w.id::text AS id, w.name,
+      (SELECT count(*)::integer FROM workout_exercises we WHERE we.workout_id = w.id) AS exercise_count,
+      (SELECT count(*)::integer FROM workout_sets s
+        JOIN workout_exercises we ON we.id = s.workout_exercise_id
+        WHERE we.workout_id = w.id) AS set_count
+    FROM workouts w WHERE w.user_id = $1 ORDER BY w.id DESC LIMIT 3`, [userId]);
+  const { rows: recentAchievements } = await pool.query(`
+    SELECT pr.id::text AS id, e.name AS exercise_name, pr.record_type, pr.value
+    FROM personal_records pr JOIN exercises e ON e.id = pr.exercise_id
+    WHERE pr.user_id = $1 ORDER BY pr.date_achieved DESC NULLS LAST, pr.id DESC LIMIT 3`, [userId]);
+  return { summary, recentWorkouts, recentAchievements, recentOrder: 'save-order' };
+}
+
+module.exports = { pool, init, getWorkouts, getWorkout, getPosts, createPost, setPostLike, getDashboard };

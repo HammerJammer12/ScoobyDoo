@@ -44,7 +44,7 @@ window.createFeedView = (api) => {
     const time = document.createElement('time');
     time.className = 'post-time muted';
     time.dateTime = post.created_at;
-    time.textContent = new Date(post.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    time.textContent = new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
     const text = document.createElement('p');
     text.className = 'post-content';
     text.textContent = post.content;
@@ -107,9 +107,13 @@ window.createFeedView = (api) => {
     status.textContent = '';
   }
 
-  async function load(currentUser) {
+  function initialize(currentUser) {
     clear();
     user = currentUser;
+  }
+
+  async function load(currentUser) {
+    initialize(currentUser);
     const currentVersion = version;
     status.textContent = 'Loading posts…';
     let posts = [];
@@ -233,5 +237,5 @@ window.createFeedView = (api) => {
       }
     }
   });
-  return { load, clear, renderProfile };
+  return { initialize, load, clear, renderProfile };
 };

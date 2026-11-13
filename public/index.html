@@ -8,11 +8,20 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/">Workout app</a>
-    <nav id="nav" aria-label="Account" hidden>
+    <a class="brand" href="/" aria-label="Workout app home"><span class="logo-mark">Logo</span><span class="brand-name">Workout app</span></a>
+    <button id="nav-toggle" class="menu-toggle" type="button" aria-label="Toggle navigation" aria-controls="nav-links" aria-expanded="true" hidden>☰</button>
+    <nav id="nav" aria-label="Main navigation" hidden>
+      <div id="nav-links">
+        <button id="view-dashboard" type="button" data-view="dashboard">Dashboard</button>
+        <button type="button" data-view="planner">Planner</button>
+        <button type="button" disabled title="Workout tracking coming soon">Track workout</button>
+        <button id="view-community" type="button" data-view="community">Community</button>
+        <button id="view-progress" type="button">Progress</button>
+        <button id="view-achievements" type="button">Achievements</button>
+        <button id="view-profile" type="button" data-view="profile">Profile</button>
+        <button type="button" disabled title="Settings coming soon">Settings</button>
+      </div>
       <span id="nav-user"></span>
-      <button id="view-profile" type="button">View profile</button>
-      <button id="back-to-feed" type="button" hidden>Back to feed</button>
       <button id="logout-btn" class="link-btn" type="button">Log out</button>
     </nav>
   </header>
@@ -21,7 +30,7 @@
     <!-- Public home page -->
     <section id="landing-view">
       <h1>Your workouts, in one place.</h1>
-      <p>Share your training, follow friends, and find your next lift.</p>
+      <p>Track your training and progress, then catch up with the community.</p>
       <button id="open-auth" type="button">Sign in / Sign up</button>
     </section>
 
@@ -56,10 +65,95 @@
     </dialog>
 
     <!-- Logged-in view -->
-    <section id="home-view" hidden>
+    <section id="dashboard-view" hidden aria-labelledby="dashboard-title">
+      <div class="dashboard-heading">
+        <div class="dashboard-logo-menu">
+          <span class="logo-mark" aria-hidden="true">Logo</span>
+          <button id="dashboard-menu" class="menu-toggle" type="button" aria-label="Toggle navigation" aria-controls="nav-links" aria-expanded="true">☰</button>
+        </div>
+        <div>
+          <h1 id="dashboard-title" class="sr-only" tabindex="-1">Dashboard</h1>
+          <time id="dashboard-date"></time>
+          <p id="welcome" class="sr-only"></p>
+        </div>
+      </div>
+      <div class="notification-strip" role="status"><strong>Notifications:</strong><span id="dashboard-notifications">No notifications to show.</span></div>
+      <p id="dashboard-status" class="muted" role="status"></p>
+      <button id="dashboard-retry" type="button" hidden>Retry dashboard</button>
+      <div class="dashboard-grid">
+        <section class="dashboard-card today-card" aria-labelledby="today-title">
+          <h2 id="today-title">Today’s workout</h2>
+          <p class="today-note">A suggestion from your saved workouts. No scheduled plan connected.</p>
+          <div id="dashboard-suggestion"></div>
+          <button class="start-workout" type="button" disabled title="Workout tracking is coming soon">Start workout <span aria-hidden="true">⟶</span></button>
+        </section>
+        <section class="dashboard-card goals-card" aria-labelledby="goals-title">
+          <h2 id="goals-title">Goals</h2>
+          <div class="goal-rings" aria-label="No goals have been set">
+            <div class="goal-ring"><span>—</span><small>No goal yet</small></div>
+            <div class="goal-ring"><span>—</span><small>No goal yet</small></div>
+            <div class="goal-ring"><span>—</span><small>No goal yet</small></div>
+          </div>
+        </section>
+        <section class="dashboard-card recent-card" aria-labelledby="recent-title">
+          <h2 id="recent-title">Your recent activities</h2>
+          <p class="activity-note muted">Latest three saved workouts · Dates not recorded yet</p>
+          <p id="dashboard-recent-empty" class="muted" hidden>No saved workouts yet.</p>
+          <ol id="dashboard-recent" class="recent-workouts"></ol>
+          <button id="dashboard-view-all" class="view-all" type="button">View all <span aria-hidden="true">⟶</span></button>
+        </section>
+        <section id="dashboard-achievements-card" class="dashboard-card achievements-card" aria-labelledby="achievements-title" tabindex="-1">
+          <h2 id="achievements-title">Recent achievements</h2>
+          <p id="dashboard-achievements-empty" class="muted">No personal records yet.</p>
+          <ul id="dashboard-achievements" class="achievement-list"></ul>
+        </section>
+        <button id="dashboard-check-progress" class="check-progress" type="button">Check your progress <span aria-hidden="true">⟶</span></button>
+      </div>
+    </section>
+
+    <section id="planner-view" hidden aria-labelledby="planner-title">
+      <div class="planner-heading"><span class="logo-mark" aria-hidden="true">Logo</span><h1 id="planner-title" tabindex="-1">Workout plan</h1></div>
+      <div class="planner-toolbar">
+        <button id="planner-add" type="button">+ To plan</button>
+        <button id="planner-load" type="button">Load plan</button>
+        <button id="planner-new" type="button">New plan</button>
+        <button id="planner-save" type="button">Save plan</button>
+      </div>
+      <div class="planner-fields">
+        <label>Plan name<input id="planner-name" maxlength="80" placeholder="Name your plan"></label>
+        <label>View<select id="planner-type"><option value="weekly">7-day week</option><option value="monthly">Full month</option></select></label>
+        <label>Starting date<input id="planner-date" type="date" min="1900-01-01" max="2200-12-31"></label>
+      </div>
+      <div class="section-heading planner-period"><h2 id="planner-period"></h2><span id="planner-dirty" class="muted"></span></div>
+      <p id="planner-status" role="status"></p>
+      <div class="planner-legend" aria-label="Workout colors"><span class="plan-arms">● Arms</span><span class="plan-legs">● Legs</span><span class="plan-back">● Back</span><span class="plan-chest">● Chest</span><span class="plan-other">● Other</span></div>
+      <div id="planner-calendar"></div>
+    </section>
+
+    <dialog id="planner-discard-dialog" aria-labelledby="planner-discard-title">
+      <h2 id="planner-discard-title">Discard unsaved planner changes?</h2>
+      <p>Your saved plans will still be available.</p>
+      <button id="planner-keep" type="button">Keep editing</button>
+      <button id="planner-discard" type="button">Discard changes</button>
+    </dialog>
+    <dialog id="planner-add-dialog" aria-labelledby="planner-add-title">
+      <form id="planner-add-form">
+        <div class="section-heading"><h2 id="planner-add-title">Add to plan</h2><button id="planner-add-close" type="button">Cancel</button></div>
+        <label>Day<select id="planner-day" required></select></label>
+        <label>Workout<select id="planner-workout" required></select></label>
+        <p id="planner-add-error" class="error" role="alert"></p>
+        <button id="planner-add-submit" type="submit">Add workout</button>
+      </form>
+    </dialog>
+    <dialog id="planner-load-dialog" aria-labelledby="planner-load-title">
+      <div class="section-heading"><h2 id="planner-load-title">Saved plans</h2><button id="planner-load-close" type="button">Close</button></div>
+      <p id="planner-load-status" role="status"></p><ul id="planner-saved-list" class="history-list"></ul>
+    </dialog>
+
+    <section id="community-view" hidden aria-labelledby="community-title">
       <div class="home-heading">
-        <h1>Home</h1>
-        <p id="welcome" class="muted"></p>
+        <h1 id="community-title" tabindex="-1">Community</h1>
+        <p class="muted">Workout updates from you and everyone else.</p>
       </div>
       <div class="social-layout">
         <section class="feed-column" aria-labelledby="feed-title">
@@ -84,7 +178,7 @@
 
     <section id="profile-view" class="profile-view" hidden aria-labelledby="profile-title">
       <div class="home-heading">
-        <h1 id="profile-title">My profile</h1>
+        <h1 id="profile-title" tabindex="-1">My profile</h1>
         <p id="profile-username" class="muted"></p>
       </div>
       <section class="feed-column profile-daily-lift" aria-labelledby="daily-lift-title">
@@ -109,6 +203,22 @@
     <button id="create-post-floating" class="primary floating-post" type="button" hidden>
       <span aria-hidden="true">＋</span> Create post
     </button>
+
+    <dialog id="progress-dialog" aria-labelledby="progress-title">
+      <div class="section-heading"><h2 id="progress-title">Your progress</h2><button id="close-progress" type="button">Close</button></div>
+      <p class="muted">Your recorded totals · All time</p>
+      <dl class="progress-summary">
+        <div><dt>Saved workouts</dt><dd id="dashboard-workout-count">—</dd></div>
+        <div><dt>Sets logged</dt><dd id="dashboard-set-count">—</dd></div>
+        <div><dt>Personal records</dt><dd id="dashboard-pr-count">—</dd></div>
+      </dl>
+    </dialog>
+
+    <dialog id="workout-history-dialog" aria-labelledby="workout-history-title">
+      <div class="section-heading"><h2 id="workout-history-title">All saved workouts</h2><button id="close-workout-history" type="button">Close</button></div>
+      <p id="workout-history-status" class="muted" role="status"></p>
+      <ul id="workout-history-list" class="history-list"></ul>
+    </dialog>
 
     <dialog id="post-dialog" aria-labelledby="post-title">
       <form id="post-form">
@@ -138,6 +248,8 @@
   <script src="/lift-tags.js"></script>
   <script src="/workouts.js"></script>
   <script src="/feed.js"></script>
+  <script src="/dashboard.js"></script>
+  <script src="/planner.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

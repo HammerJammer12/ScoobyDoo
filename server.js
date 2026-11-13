@@ -3,7 +3,7 @@ const path = require('path');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
-const { pool, init } = require('./db');
+const { pool, init, getDashboard } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -149,7 +149,11 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
 
+app.use('/api/plans', requireAuth, require('./routes/plans'));
 app.use('/api/workouts', requireAuth, require('./routes/workout-views'));
+app.get('/api/dashboard', requireAuth, async (req, res) => {
+  res.json(await getDashboard(req.user.id));
+});
 app.use('/api', requireAuth, require('./routes/posts'));
 
 app.use(express.static(path.join(__dirname, 'public')));

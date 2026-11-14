@@ -80,6 +80,92 @@ router.post('/workouts', wrap(async (req, res) => {
     }
   }
 
+router.get('/workouts', wrap(async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT w.id,
+            w.name,
+            COUNT(DISTINCT we.id)::int AS exercise_count,
+            COUNT(ws.id)::int          AS set_count
+       FROM workouts w
+       LEFT JOIN workout_exercises we ON we.workout_id = w.id
+       LEFT JOIN workout_sets ws      ON ws.workout_exercise_id = we.id
+      WHERE w.user_id = $1
+      GROUP BY w.id
+      ORDER BY w.id DESC`,
+    [req.user.id]
+  );
+
+  res.json({
+    workouts: rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      exerciseCount: r.exercise_count,
+      setCount: r.set_count,
+    })),
+  });
+}));
+
+router.get('/workouts/:id', wrap(async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: 'Invalid workout id' });
+  }
+
+  const { rows: [workout] } = await pool.query(
+    'SELECT id, name FROM workouts WHERE id = $1 AND user_id = $2',
+    [id, req.user.id]
+  );
+
+  if (!workout) return res.status(404).json({ error: 'Workout not found' });
+
+  const { rows } = await pool.query(
+    `SELECT we.id AS workout_exercise_id,
+            we.position_in_workout,
+            e.id AS exercise_id,
+            e.name,
+            e.primary_muscle,
+            e.tracking_type,
+            ws.set_number,
+            ws.weight_kgs,
+            ws.reps,
+            ws.duration_secs,
+            ws.distance_meters
+       FROM workout_exercises we
+       JOIN exercises e ON e.id = we.exercise_id
+       LEFT JOIN workout_sets ws ON ws.workout_exercise_id = we.id
+      WHERE we.workout_id = $1
+      ORDER BY we.position_in_workout, ws.set_number`,
+    [id]
+  );
+
+  const exercises = [];
+  const byWe = new Map();
+  for (const r of rows) {
+    let ex = byWe.get(r.workout_exercise_id);
+    if (!ex) {
+      ex = {
+        exerciseId: r.exercise_id,
+        name: r.name,
+        primaryMuscle: r.primary_muscle,
+        trackingType: r.tracking_type,
+        sets: [],
+      };
+      byWe.set(r.workout_exercise_id, ex);
+      exercises.push(ex);
+    }
+    if (r.set_number != null) {
+      const set = { setNumber: r.set_number };
+      if (r.weight_kgs != null) set.weightKgs = r.weight_kgs;
+      if (r.reps != null) set.reps = r.reps;
+      if (r.duration_secs != null) set.durationSecs = r.duration_secs;
+      if (r.distance_meters != null) set.distanceMeters = r.distance_meters;
+      ex.sets.push(set);
+    }
+  }
+
+  res.json({ id: workout.id, name: workout.name, exercises });
+}));
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');

@@ -120,6 +120,32 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
 
+const EXERCISE_IMAGE_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+
+// Search the exercise library, e.g. /api/exercises?q=curl&muscle=biceps&equipment=dumbbell
+app.get('/api/exercises', async (req, res) => {
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 25, 1), 100);
+  const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+  const { rows } = await pool.query(
+    `SELECT id, name, primary_muscle, secondary_muscles, equipment, mechanic, force, level,
+            category, tracking_type, instructions, image_paths
+       FROM exercises
+      WHERE ($1::text IS NULL OR strpos(lower(name), lower($1)) > 0)
+        AND ($2::text IS NULL OR primary_muscle = lower($2))
+        AND ($3::text IS NULL OR equipment = lower($3))
+      ORDER BY name
+      LIMIT $4 OFFSET $5`,
+    [str(req.query.q), str(req.query.muscle), str(req.query.equipment), limit, offset]
+  );
+  res.json({
+    exercises: rows.map(({ image_paths, ...e }) => ({
+      ...e,
+      images: image_paths.map((p) => EXERCISE_IMAGE_BASE + p),
+    })),
+  });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((err, _req, res, _next) => {

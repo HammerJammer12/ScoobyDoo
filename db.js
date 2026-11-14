@@ -6,7 +6,31 @@ const pool = new Pool({
 });
 
 //TODO: split table inits into migration files once schemas are finalised 
+// Renames tables/columns created with the old "excercise" spelling so existing local databases keep working
+const RENAME_LEGACY = `
+  DO $$
+  DECLARE r RECORD;
+  BEGIN
+    FOR r IN SELECT * FROM (VALUES
+      ('excercises', 'exercises'),
+      ('template_excercises', 'template_exercises'),
+      ('workout_excercises', 'workout_exercises')
+    ) AS t(old_name, new_name) LOOP
+      IF to_regclass(r.old_name) IS NOT NULL AND to_regclass(r.new_name) IS NULL THEN
+        EXECUTE format('ALTER TABLE %I RENAME TO %I', r.old_name, r.new_name);
+      END IF;
+    END LOOP;
+
+    FOR r IN SELECT table_name, column_name FROM information_schema.columns
+             WHERE table_schema = current_schema() AND column_name LIKE '%excercise%' LOOP
+      EXECUTE format('ALTER TABLE %I RENAME COLUMN %I TO %I',
+        r.table_name, r.column_name, replace(r.column_name, 'excercise', 'exercise'));
+    END LOOP;
+  END $$;
+`;
+
 async function init() {
+  await pool.query(RENAME_LEGACY);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
@@ -23,12 +47,25 @@ async function init() {
     );
     CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 
-    CREATE TABLE IF NOT EXISTS excercises (
+    CREATE TABLE IF NOT EXISTS exercises (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       primary_muscle TEXT NOT NULL,
       tracking_type TEXT NOT NULL CHECK (tracking_type IN ('weight_and_reps', 'reps_only', 'duration', 'distance'))
     );
+
+    -- Library metadata, filled by scripts/seed-exercises.js (ADD COLUMN so existing databases pick these up)
+    ALTER TABLE exercises
+      ADD COLUMN IF NOT EXISTS source_id TEXT UNIQUE,
+      ADD COLUMN IF NOT EXISTS secondary_muscles TEXT[] NOT NULL DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS equipment TEXT,
+      ADD COLUMN IF NOT EXISTS mechanic TEXT,
+      ADD COLUMN IF NOT EXISTS force TEXT,
+      ADD COLUMN IF NOT EXISTS level TEXT,
+      ADD COLUMN IF NOT EXISTS category TEXT,
+      ADD COLUMN IF NOT EXISTS instructions TEXT[] NOT NULL DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS image_paths TEXT[] NOT NULL DEFAULT '{}';
+    CREATE INDEX IF NOT EXISTS idx_exercises_primary_muscle ON exercises(primary_muscle);
 
     CREATE TABLE IF NOT EXISTS workout_templates (
       id SERIAL PRIMARY KEY,
@@ -36,10 +73,10 @@ async function init() {
       name TEXT NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS template_excercises (
+    CREATE TABLE IF NOT EXISTS template_exercises (
       id SERIAL PRIMARY KEY,
       template_id INTEGER NOT NULL REFERENCES workout_templates(id) ON DELETE CASCADE,
-      excercise_id INTEGER NOT NULL REFERENCES excercises (id) ON DELETE CASCADE,
+      exercise_id INTEGER NOT NULL REFERENCES exercises (id) ON DELETE CASCADE,
       position_in_workout INTEGER NOT NULL,
       target_sets INTEGER,
       target_reps INTEGER,
@@ -55,16 +92,16 @@ async function init() {
       name TEXT NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS workout_excercises (
+    CREATE TABLE IF NOT EXISTS workout_exercises (
       id SERIAL PRIMARY KEY,
       workout_id INTEGER NOT NULL REFERENCES workouts(id) ON DELETE CASCADE,
-      excercise_id INTEGER NOT NULL REFERENCES excercises (id) ON DELETE CASCADE,
+      exercise_id INTEGER NOT NULL REFERENCES exercises (id) ON DELETE CASCADE,
       position_in_workout INTEGER NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS workout_sets (
       id SERIAL PRIMARY KEY,
-      workout_excercise_id INTEGER NOT NULL REFERENCES workout_excercises(id) ON DELETE CASCADE,
+      workout_exercise_id INTEGER NOT NULL REFERENCES workout_exercises(id) ON DELETE CASCADE,
       set_number INTEGER NOT NULL,
       weight_kgs INTEGER,
       reps INTEGER,
@@ -75,7 +112,7 @@ async function init() {
     CREATE TABLE IF NOT EXISTS personal_records(
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      excercise_id INTEGER NOT NULL REFERENCES excercises(id) ON DELETE CASCADE,
+      exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
       set_id INTEGER NOT NULL REFERENCES workout_sets(id) ON DELETE CASCADE,
       record_type TEXT NOT NULL CHECK(record_type in ('max_weight', 'max_reps', 'max_set_volume', 'max_est_1rm')),
       value INTEGER NOT NULL,

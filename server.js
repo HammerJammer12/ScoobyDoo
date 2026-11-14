@@ -146,6 +146,8 @@ app.get('/api/exercises', async (req, res) => {
   });
 });
 
+app.use('/api', require('./routes/recommendations')({ requireAuth }));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((err, _req, res, _next) => {

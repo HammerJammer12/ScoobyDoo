@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parsePreferences, buildPlan, findAlternatives, SPLITS } = require('../lib/recommend');
+const { parsePreferences, buildPlan, findAlternatives, parsePlanToSave, SPLITS } = require('../lib/recommend');
 
 // Small fixture library: several options for every muscle the day slots use
 const MUSCLES = ['quadriceps', 'hamstrings', 'glutes', 'chest', 'lats', 'middle back', 'shoulders',
@@ -181,4 +181,39 @@ test('findAlternatives respects equipment, level, exclude and limit', () => {
   assert.equal(alts[0].mechanic, 'compound'); // same mechanic as the target ranks first
   assert.ok(alts.every((e) => e.equipment === 'dumbbell' && e.level === 'beginner'));
   assert.equal(findAlternatives(target, library, prefsFor({ level: 'expert' }), { limit: 3 }).length, 3);
+});
+
+test('parsePlanToSave accepts a plan straight from buildPlan', () => {
+  const built = buildPlan(prefsFor({ daysPerWeek: 4 }), library, { rng: seededRng() });
+  const { plan, error } = parsePlanToSave({ name: '  Spring block ', days: built.days });
+  assert.equal(error, undefined);
+  assert.equal(plan.name, 'Spring block');
+  assert.deepEqual(plan.days.map((d) => d.name), ['Upper A', 'Lower A', 'Upper B', 'Lower B']);
+  const first = plan.days[0].exercises[0];
+  assert.deepEqual(first, {
+    exerciseId: built.days[0].exercises[0].exercise_id, sets: 4, reps: 10, durationSecs: null,
+  });
+});
+
+test('parsePlanToSave fills in default names', () => {
+  const { plan } = parsePlanToSave({ days: [{ exercises: [{ exercise_id: 1, sets: 3, duration_secs: 30 }] }] });
+  assert.equal(plan.name, 'My Plan');
+  assert.equal(plan.days[0].name, 'Day 1');
+  assert.deepEqual(plan.days[0].exercises[0], { exerciseId: 1, sets: 3, reps: null, durationSecs: 30 });
+});
+
+test('parsePlanToSave rejects bad plans', () => {
+  const ex = { exercise_id: 1, sets: 3, rep_min: 8, rep_max: 12 };
+  const day = (exercises) => ({ name: 'Push', exercises });
+  for (const body of [
+    undefined, { days: [] }, { days: 'push' }, { days: Array(8).fill(day([ex])) },
+    { name: 'x'.repeat(101), days: [day([ex])] },
+    { days: [day([])] }, { days: [day(Array(21).fill(ex))] },
+    { days: [day([{ ...ex, exercise_id: '1' }])] }, { days: [day([{ ...ex, exercise_id: 0 }])] },
+    { days: [day([{ ...ex, sets: 0 }])] }, { days: [day([{ ...ex, sets: 2.5 }])] },
+    { days: [day([{ ...ex, rep_min: 12, rep_max: 8 }])] }, { days: [day([{ ...ex, rep_max: 500 }])] },
+    { days: [day([{ ...ex, duration_secs: -5 }])] }, { days: [day([null])] }, { days: [null] },
+  ]) {
+    assert.ok(parsePlanToSave(body).error, `expected an error for ${JSON.stringify(body)?.slice(0, 80)}`);
+  }
 });

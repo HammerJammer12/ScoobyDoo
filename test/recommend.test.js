@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parsePreferences, buildPlan, SPLITS } = require('../lib/recommend');
+const { parsePreferences, buildPlan, findAlternatives, SPLITS } = require('../lib/recommend');
 
 // Small fixture library: several options for every muscle the day slots use
 const MUSCLES = ['quadriceps', 'hamstrings', 'glutes', 'chest', 'lats', 'middle back', 'shoulders',
@@ -160,4 +160,25 @@ test('buildPlan prescribes sets and reps by goal and tracking type', () => {
 test('buildPlan is reproducible with the same random seed', () => {
   const prefs = prefsFor({ daysPerWeek: 5 });
   assert.deepEqual(buildPlan(prefs, library, { rng: seededRng(7) }), buildPlan(prefs, library, { rng: seededRng(7) }));
+});
+
+test('findAlternatives returns other exercises for the same muscle, same mechanic first', () => {
+  const target = library.find((e) => e.primary_muscle === 'chest' && e.mechanic === 'compound'
+    && e.equipment === 'barbell' && e.level === 'beginner');
+  const alts = findAlternatives(target, library, prefsFor({ level: 'expert' }));
+  assert.ok(alts.length > 0);
+  assert.ok(alts.every((e) => e.primary_muscle === 'chest' && e.id !== target.id));
+  const firstIsolation = alts.findIndex((e) => e.mechanic === 'isolation');
+  const lastCompound = alts.map((e) => e.mechanic).lastIndexOf('compound');
+  assert.ok(firstIsolation === -1 || lastCompound < firstIsolation);
+});
+
+test('findAlternatives respects equipment, level, exclude and limit', () => {
+  const target = library.find((e) => e.primary_muscle === 'biceps');
+  const exclude = library.filter((e) => e.primary_muscle === 'biceps' && e.equipment === 'body only').map((e) => e.id);
+  const alts = findAlternatives(target, library, prefsFor({ equipment: ['dumbbell'] }), { exclude, limit: 5 });
+  assert.equal(alts.length, 2); // the beginner dumbbell compound and isolation curls
+  assert.equal(alts[0].mechanic, 'compound'); // same mechanic as the target ranks first
+  assert.ok(alts.every((e) => e.equipment === 'dumbbell' && e.level === 'beginner'));
+  assert.equal(findAlternatives(target, library, prefsFor({ level: 'expert' }), { limit: 3 }).length, 3);
 });

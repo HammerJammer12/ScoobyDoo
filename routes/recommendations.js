@@ -1,7 +1,9 @@
 // Workout plan recommendations: preview a plan, swap exercises, save a plan as workout templates.
 const express = require('express');
 const { pool } = require('../db');
-const { parsePreferences, buildPlan, findAlternatives, PLAN_CATEGORIES } = require('../lib/recommend');
+const {
+  parsePreferences, buildPlan, findAlternatives, parsePlanToSave, PLAN_CATEGORIES,
+} = require('../lib/recommend');
 
 // How many of the user's latest workouts count as "recent" when avoiding repeats
 const RECENT_WORKOUTS = 5;
@@ -77,6 +79,55 @@ module.exports = function recommendationRoutes({ requireAuth }) {
     );
     const alternatives = findAlternatives(target, sameMuscle, prefs, { exclude: idList(req.query.exclude), limit });
     res.json({ exercise: toPublic(target), alternatives: alternatives.map(toPublic) });
+  });
+
+  // Save a plan (usually an edited preview) as one workout template per day.
+  // Body: { name, days: [{ name, exercises: [{ exercise_id, sets, rep_min, rep_max, duration_secs }] }] }
+  router.post('/plans', requireAuth, async (req, res) => {
+    const { plan, error } = parsePlanToSave(req.body);
+    if (error) return res.status(400).json({ error });
+
+    const ids = [...new Set(plan.days.flatMap((d) => d.exercises.map((e) => e.exerciseId)))];
+    const { rows: found } = await pool.query('SELECT id FROM exercises WHERE id = ANY($1::int[])', [ids]);
+    const known = new Set(found.map((r) => r.id));
+    const missing = ids.find((id) => !known.has(id));
+    if (missing) return res.status(400).json({ error: `Unknown exercise id ${missing}` });
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const templates = [];
+      for (const day of plan.days) {
+        const name = `${plan.name} - ${day.name}`;
+        const { rows: [t] } = await client.query(
+          'INSERT INTO workout_templates (user_id, name) VALUES ($1, $2) RETURNING id, name',
+          [req.user.id, name]
+        );
+        await client.query(
+          `INSERT INTO template_exercises
+             (template_id, exercise_id, position_in_workout, target_sets, target_reps, target_duration)
+           SELECT $1, e.exercise_id, e.position, e.sets, e.reps, e.duration
+             FROM unnest($2::int[], $3::int[], $4::int[], $5::int[], $6::int[])
+                  AS e(exercise_id, position, sets, reps, duration)`,
+          [
+            t.id,
+            day.exercises.map((e) => e.exerciseId),
+            day.exercises.map((_, i) => i + 1),
+            day.exercises.map((e) => e.sets),
+            day.exercises.map((e) => e.reps),
+            day.exercises.map((e) => e.durationSecs),
+          ]
+        );
+        templates.push({ ...t, exercise_count: day.exercises.length });
+      }
+      await client.query('COMMIT');
+      res.status(201).json({ plan: { name: plan.name, templates } });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   });
 
   return router;

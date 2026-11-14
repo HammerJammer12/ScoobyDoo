@@ -44,6 +44,12 @@ async function main() {
   try {
     await client.query('BEGIN');
     for (const e of exercises) {
+      // Adopt a hand-added row with the same name (e.g. a placeholder "Plank") instead of
+      // duplicating it, which keeps its id and anything already referencing it
+      await client.query(
+        'UPDATE exercises SET source_id = $1 WHERE source_id IS NULL AND lower(name) = lower($2)',
+        [e.id, e.name]
+      );
       await client.query(
         `INSERT INTO exercises (source_id, name, primary_muscle, tracking_type, secondary_muscles,
                                 equipment, mechanic, force, level, category, instructions, image_paths)

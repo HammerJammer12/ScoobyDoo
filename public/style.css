@@ -1,0 +1,100 @@
+
+.onboarding-card {
+  max-width: 620px;
+  margin: 40px auto;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.onboarding-progress {
+  margin-bottom: 25px;
+  font-size: 12px;
+  color: #888;
+}
+
+.progress-track {
+  height: 6px;
+  background: #e5e5e5;
+  border-radius: 10px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #16a34a;
+  transition: width 0.3s ease;
+}
+
+.goal-card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 14px 0;
+}
+
+.goal-card > label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.goal-card input {
+  accent-color: #16a34a;
+}
+
+.goal-details {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 8px;
+  background: #f5f7f5;
+}
+
+.goal-details[hidden] {
+  display: none;
+}
+
+.goal-details p {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.goal-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.goal-options label,
+.goal-details > label {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.onboarding-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.onboarding-actions button {
+  padding: 12px 22px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .goal-options {
+    grid-template-columns: 1fr;
+  }
+}

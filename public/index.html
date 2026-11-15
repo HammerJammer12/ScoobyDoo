@@ -103,6 +103,232 @@
       </div>
     </section>
 
+
+    <!-- Onboarding: Welcome -->
+    <section id="welcome-view" hidden>
+      <div class="card onboarding-card">
+        <p class="eyebrow">WELCOME TO FITTRACK</p>
+        <h1>Let's get started!</h1>
+        <p>
+          Your fitness journey is unique.
+          Let's personalize your experience so you can
+          reach your goals, track your progress, and
+          connect with friends.
+        </p>
+        <button id="welcome-next" class="primary">
+          Get started
+        </button>
+      </div>
+    </section>
+
+    <!-- Onboarding: Fitness goals -->
+    <section id="goals-view" hidden>
+      <div class="card onboarding-card">
+
+        <div class="onboarding-progress">
+          <span>STEP 1 OF 5</span>
+          <div class="progress-track">
+            <div class="progress-fill" style="width: 20%"></div>
+          </div>
+        </div>
+
+        <h1>What are your fitness goals?</h1>
+        <p>Select all that apply. We'll personalize
+          your experience based on your goals.</p>
+
+        <!-- BUILD MUSCLE -->
+        <div class="goal-card">
+          <label>
+            <input type="checkbox" name="goal"
+              value="Build muscle" data-goal="muscle">
+            Build muscle
+          </label>
+
+          <div class="goal-details" id="muscle-details" hidden>
+            <p>Which muscle groups do you want to focus on?</p>
+
+            <div class="goal-options">
+              <label><input type="checkbox" name="muscleGroup" value="Chest"> Chest</label>
+              <label><input type="checkbox" name="muscleGroup" value="Back"> Back</label>
+              <label><input type="checkbox" name="muscleGroup" value="Shoulders"> Shoulders</label>
+              <label><input type="checkbox" name="muscleGroup" value="Arms"> Arms</label>
+              <label><input type="checkbox" name="muscleGroup" value="Legs"> Legs</label>
+              <label><input type="checkbox" name="muscleGroup" value="Glutes"> Glutes</label>
+              <label><input type="checkbox" name="muscleGroup" value="Core"> Core</label>
+              <label><input type="checkbox" name="muscleGroup" value="Full body"> Full body</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOSE WEIGHT -->
+        <div class="goal-card">
+          <label>
+            <input type="checkbox" name="goal"
+              value="Lose weight" data-goal="weight">
+            Lose weight
+          </label>
+
+          <div class="goal-details" id="weight-details" hidden>
+            <p>What is your primary focus?</p>
+
+            <label><input type="radio" name="weightFocus" value="Fat loss"> Fat loss</label>
+            <label><input type="radio" name="weightFocus" value="Body composition"> Improve body composition</label>
+            <label><input type="radio" name="weightFocus" value="Weight management"> General weight management</label>
+          </div>
+        </div>
+
+        <!-- IMPROVE STRENGTH -->
+        <div class="goal-card">
+          <label>
+            <input type="checkbox" name="goal"
+              value="Improve strength" data-goal="strength">
+            Improve strength
+          </label>
+
+          <div class="goal-details" id="strength-details" hidden>
+            <p>Which exercises do you want to improve?</p>
+
+            <div class="goal-options">
+              <label><input type="checkbox" name="strengthExercise" value="Bench press"> Bench press</label>
+              <label><input type="checkbox" name="strengthExercise" value="Squat"> Squat</label>
+              <label><input type="checkbox" name="strengthExercise" value="Deadlift"> Deadlift</label>
+              <label><input type="checkbox" name="strengthExercise" value="Overhead press"> Overhead press</label>
+              <label><input type="checkbox" name="strengthExercise" value="Pull-ups"> Pull-ups</label>
+              <label><input type="checkbox" name="strengthExercise" value="Other"> Other</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMPROVE ENDURANCE -->
+        <div class="goal-card">
+          <label>
+            <input type="checkbox" name="goal"
+              value="Improve endurance" data-goal="endurance">
+            Improve endurance
+          </label>
+
+          <div class="goal-details" id="endurance-details" hidden>
+            <p>What type of endurance interests you?</p>
+
+            <div class="goal-options">
+              <label><input type="checkbox" name="enduranceType" value="Running"> Running</label>
+              <label><input type="checkbox" name="enduranceType" value="Cycling"> Cycling</label>
+              <label><input type="checkbox" name="enduranceType" value="Swimming"> Swimming</label>
+              <label><input type="checkbox" name="enduranceType" value="Cardio"> General cardio</label>
+              <label><input type="checkbox" name="enduranceType" value="Sports"> Sports performance</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- OVERALL HEALTH -->
+        <div class="goal-card">
+          <label>
+            <input type="checkbox" name="goal"
+              value="Overall health" data-goal="health">
+            Improve overall health
+          </label>
+
+          <div class="goal-details" id="health-details" hidden>
+            <p>What would you like to focus on?</p>
+
+            <div class="goal-options">
+              <label><input type="checkbox" name="healthFocus" value="Energy"> Increase energy</label>
+              <label><input type="checkbox" name="healthFocus" value="Cardiovascular fitness"> Cardiovascular fitness</label>
+              <label><input type="checkbox" name="healthFocus" value="Sleep"> Improve sleep</label>
+              <label><input type="checkbox" name="healthFocus" value="Consistency"> Build consistency</label>
+              <label><input type="checkbox" name="healthFocus" value="Wellness"> General wellness</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- FLEXIBILITY -->
+        <div class="goal-card">
+          <label>
+            <input type="checkbox" name="goal"
+              value="Increase flexibility" data-goal="flexibility">
+            Increase flexibility
+          </label>
+
+          <div class="goal-details" id="flexibility-details" hidden>
+            <p>Which areas would you like to improve?</p>
+
+            <div class="goal-options">
+              <label><input type="checkbox" name="flexibilityArea" value="Hips"> Hips</label>
+              <label><input type="checkbox" name="flexibilityArea" value="Hamstrings"> Hamstrings</label>
+              <label><input type="checkbox" name="flexibilityArea" value="Shoulders"> Shoulders</label>
+              <label><input type="checkbox" name="flexibilityArea" value="Back"> Back</label>
+              <label><input type="checkbox" name="flexibilityArea" value="Full body"> Full body</label>
+            </div>
+          </div>
+        </div>
+
+        <p id="goals-error" class="error" hidden></p>
+
+        <div class="onboarding-actions">
+          <button id="goals-back" type="button">Back</button>
+          <button id="goals-next" class="primary" type="button">
+            Continue
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Onboarding: Workout Preferences -->
+    <section id="preferences-view" hidden>
+      <div class="card onboarding-card">
+
+        <div class="onboarding-progress">
+          <span>STEP 2 OF 5</span>
+          <div class="progress-track">
+            <div class="progress-fill" style="width: 40%"></div>
+          </div>
+        </div>
+
+        <h1>Let's personalize your workouts.</h1>
+        <p>Tell us a little about how you like to exercise.</p>
+
+        <h3>What's your fitness level?</h3>
+        <select id="fitness-level">
+          <option value="">Choose your level</option>
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+
+        <h3>What types of workouts do you enjoy?</h3>
+        <div class="goal-options">
+          <label><input type="checkbox" name="workoutType" value="Weightlifting"> Weightlifting</label>
+          <label><input type="checkbox" name="workoutType" value="Cardio"> Cardio</label>
+          <label><input type="checkbox" name="workoutType" value="Running"> Running</label>
+          <label><input type="checkbox" name="workoutType" value="Cycling"> Cycling</label>
+          <label><input type="checkbox" name="workoutType" value="Yoga"> Yoga</label>
+          <label><input type="checkbox" name="workoutType" value="Pilates"> Pilates</label>
+          <label><input type="checkbox" name="workoutType" value="Calisthenics"> Calisthenics</label>
+          <label><input type="checkbox" name="workoutType" value="HIIT"> HIIT</label>
+        </div>
+
+        <h3>Where do you typically work out?</h3>
+        <select id="workout-location">
+          <option value="">Choose a location</option>
+          <option value="gym">Gym</option>
+          <option value="home">At home</option>
+          <option value="outdoors">Outdoors</option>
+          <option value="multiple">Multiple locations</option>
+        </select>
+
+        <p id="preferences-error" class="error" hidden></p>
+
+        <div class="onboarding-actions">
+          <button id="preferences-back" type="button">Back</button>
+          <button id="preferences-next" class="primary" type="button">
+            Continue
+          </button>
+        </div>
+
+      </div>
+    </section>
+
     <!-- Home / Dashboard -->
     <section id="home-view" class="page" hidden>
       <div class="card">

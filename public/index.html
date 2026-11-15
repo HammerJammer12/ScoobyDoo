@@ -14,22 +14,19 @@
 <body>
 
   <!-- Nav Bar -->
+  <!-- Navigation Bar -->
   <header class="topbar">
     <div class="nav-brand">
-      <a href="/" class="brand">Log-In</a>
+      <a href="#home" class="brand">FitTrack</a>
     </div>
 
     <nav id="nav" class="main-nav" hidden>
       <a href="#home" class="nav-link active" data-page="home">
-        Home
+        Dashboard
       </a>
 
       <a href="#feed" class="nav-link" data-page="feed">
         Feed
-      </a>
-
-      <a href="#profile" class="nav-link" data-page="profile">
-        Profile
       </a>
 
       <a href="#progress" class="nav-link" data-page="progress">
@@ -38,6 +35,10 @@
 
       <a href="#plan" class="nav-link" data-page="plan">
         Plan
+      </a>
+
+      <a href="#profile" class="nav-link" data-page="profile">
+        Profile
       </a>
 
       <a href="#settings" class="nav-link" data-page="settings">
@@ -53,6 +54,7 @@
       </div>
     </nav>
   </header>
+
 
 
   <main>
@@ -328,6 +330,152 @@
 
       </div>
     </section>
+
+
+    <!-- Onboarding: Fitness Background -->
+    <section id="background-view" hidden>
+      <div class="card onboarding-card">
+
+        <div class="onboarding-progress">
+          <span>STEP 3 OF 5</span>
+          <div class="progress-track">
+            <div class="progress-fill" style="width: 60%"></div>
+          </div>
+        </div>
+
+        <h1>Tell us about your fitness journey.</h1>
+        <p>
+          Everyone starts somewhere. This helps us
+          personalize your FitTrack experience.
+        </p>
+
+        <!-- Experience -->
+        <h3>How long have you been working out consistently?</h3>
+
+        <div class="goal-options">
+          <label>
+            <input type="radio" name="fitnessExperience" value="Just starting">
+            Just starting
+          </label>
+
+          <label>
+            <input type="radio" name="fitnessExperience" value="Less than 6 months">
+            Less than 6 months
+          </label>
+
+          <label>
+            <input type="radio" name="fitnessExperience" value="6 months - 2 years">
+            6 months – 2 years
+          </label>
+
+          <label>
+            <input type="radio" name="fitnessExperience" value="2 - 5 years">
+            2 – 5 years
+          </label>
+
+          <label>
+            <input type="radio" name="fitnessExperience" value="5+ years">
+            5+ years
+          </label>
+        </div>
+
+        <!-- Current activity -->
+        <h3>How often do you currently exercise?</h3>
+
+        <div class="goal-options">
+          <label>
+            <input type="radio" name="activityLevel" value="Rarely">
+            Rarely
+          </label>
+
+          <label>
+            <input type="radio" name="activityLevel" value="1-2 times per week">
+            1–2 times per week
+          </label>
+
+          <label>
+            <input type="radio" name="activityLevel" value="3-4 times per week">
+            3–4 times per week
+          </label>
+
+          <label>
+            <input type="radio" name="activityLevel" value="5+ times per week">
+            5+ times per week
+          </label>
+        </div>
+
+        <!-- Equipment -->
+        <h3>What equipment do you have access to?</h3>
+        <p class="muted">Select all that apply.</p>
+
+        <div class="goal-options">
+          <label>
+            <input type="checkbox" name="equipment" value="Full gym">
+            Full gym
+          </label>
+
+          <label>
+            <input type="checkbox" name="equipment" value="Dumbbells">
+            Dumbbells
+          </label>
+
+          <label>
+            <input type="checkbox" name="equipment" value="Barbells">
+            Barbells
+          </label>
+
+          <label>
+            <input type="checkbox" name="equipment" value="Resistance bands">
+            Resistance bands
+          </label>
+
+          <label>
+            <input type="checkbox" name="equipment" value="Cardio machines">
+            Cardio machines
+          </label>
+
+          <label>
+            <input type="checkbox" name="equipment" value="Bodyweight only">
+            Bodyweight only
+          </label>
+
+          <label>
+            <input type="checkbox" name="equipment" value="Other">
+            Other
+          </label>
+        </div>
+
+        <!-- Exercise preferences -->
+        <h3>Are there exercises you particularly enjoy or dislike?</h3>
+        <p class="muted">Both questions are optional.</p>
+
+        <label for="favorite-exercises">Exercises you enjoy</label>
+        <textarea
+          id="favorite-exercises"
+          placeholder="e.g. Squats, running, bench press..."
+          rows="2">
+        </textarea>
+
+        <label for="disliked-exercises">Exercises you'd rather avoid</label>
+        <textarea
+          id="disliked-exercises"
+          placeholder="e.g. Burpees, long-distance running..."
+          rows="2">
+        </textarea>
+
+        <p id="background-error" class="error" hidden></p>
+
+        <div class="onboarding-actions">
+          <button id="background-back" type="button">Back</button>
+
+          <button id="background-next" class="primary" type="button">
+            Continue
+          </button>
+        </div>
+
+      </div>
+    </section>
+
 
     <!-- Home / Dashboard -->
     <section id="home-view" class="page" hidden>

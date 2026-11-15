@@ -1,6 +1,8 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   let mode = 'login';
+  let newUser = null;
+  let onboardingData = {};
 
   async function api(method, url, body) {
     const res = await fetch(url, {
@@ -38,16 +40,15 @@
       'auth-view',
       'welcome-view',
       'goals-view',
-      'home-view',
       'preferences-view',
+      'background-view',
+      'profile-view',
+      'home-view'
     ].forEach(id => {
       const element = $(id);
       if (element) element.hidden = true;
     });
   }
-
-  let newUser = null;
-  let onboardingData = {};
 
   // Onboarding flow functions
   function startOnboarding(user) {
@@ -198,8 +199,56 @@ $('preferences-next').addEventListener('click', () => {
 
   console.log('Complete onboarding data:', onboardingData);
 
-  alert('Preferences saved! Next: workout schedule.');
+  $('preferences-view').hidden = true;
+  $('background-view').hidden = false;
 });
+
+$('background-back').addEventListener('click', () => {
+  $('background-view').hidden = true;
+  $('preferences-view').hidden = false;
+});
+
+$('background-next').addEventListener('click', () => {
+    const error = $('background-error');
+    error.hidden = true;
+
+    const experience = document.querySelector(
+      'input[name="fitnessExperience"]:checked'
+    );
+
+    const activity = document.querySelector(
+      'input[name="activityLevel"]:checked'
+    );
+
+    const equipment = getValues('equipment');
+
+    if (!experience || !activity) {
+      error.textContent =
+        'Please answer your fitness experience and activity level.';
+      error.hidden = false;
+      return;
+    }
+
+    if (!equipment.length) {
+      error.textContent =
+        'Please select at least one equipment option.';
+      error.hidden = false;
+      return;
+    }
+
+    onboardingData.background = {
+      experience: experience.value,
+      activity: activity.value,
+      equipment,
+      favoriteExercises: $('favorite-exercises').value.trim(),
+      dislikedExercises: $('disliked-exercises').value.trim()
+    };
+
+    console.log('Complete onboarding data:', onboardingData);
+
+    $('background-view').hidden = true;
+    $('profile-view').hidden = false;
+  });
 
 
   function showPage(page) {

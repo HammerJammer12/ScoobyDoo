@@ -22,6 +22,10 @@
    ```
    npm start
    ```
+5. Load the exercise library (about 870 exercises, safe to re-run):
+   ```
+   npm run seed:exercises
+   ```
 
 ## Environment variables
 
@@ -30,6 +34,7 @@
 | `DATABASE_URL` | yes | Postgres connection string |
 | `DATABASE_SSL` | on the host | Set to `true` when the database requires SSL. Should be left unset locally |
 | `PORT` | no | Server port, default 3000 |
+| `EXERCISE_DATASET_URL` | no | Override the dataset used by `npm run seed:exercises` |
 
 ## Project structure
 
@@ -37,6 +42,9 @@
 server.js     Express authentication, sessions, and file serving
 db.js         Everything sql and database
 routes/       Express routers mounted from server.js 
+scripts/      One-off scripts (exercise seeding)
+lib/          Logic with no database access (plan recommendations)
+test/         Tests, run with npm test
 public/       Front end display logic
 docs/         Project plan (PLAN.md) and Excalidraw diagrams
 ```
@@ -55,6 +63,9 @@ docs/         Project plan (PLAN.md) and Excalidraw diagrams
 | PATCH | `/api/settings/privacy` | Set profile visibility (`{ isPrivate }`, friends-only by default) |
 | POST | `/api/settings/logout-others` | End every session except the current one |
 | DELETE | `/api/settings/account` | Delete the account (`{ password }`) and everything that belongs to it |
+| GET | `/api/exercises?q=&muscle=&equipment=&limit=&offset=` | Search the exercise library (limit default 25, max 100) |
+
+Exercise data comes from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain).
 
 
 

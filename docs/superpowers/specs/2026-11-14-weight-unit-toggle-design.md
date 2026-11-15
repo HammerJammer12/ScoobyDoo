@@ -68,7 +68,7 @@ on lb. People switching units mid-workout is not a goal.
 
 **Settings page**
 - A new "Units" card between Privacy and Sessions, with a two-option lb | kg
-  radio group. It saves on change, matching how the privacy card behaves.
+  radio group and a Save button, matching how the privacy card behaves.
 
 **Tests**
 - `test/units.test.js`: round-trips (135 lb → kg → 135 lb; 100 kg → lb → 100 kg),

@@ -44,7 +44,7 @@ async function loadUser(req, _res, next) {
     const s = rows[0];
     if (s && Number(s.expires_at) > Date.now()) {
       const result = await pool.query(
-        'SELECT id, username, created_at FROM users WHERE id = $1',
+        'SELECT id, username, created_at, weight_unit FROM users WHERE id = $1',
         [s.user_id]
       );
       req.user = result.rows[0] || null;

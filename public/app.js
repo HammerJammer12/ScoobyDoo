@@ -27,28 +27,33 @@
     showPage('home');
   }
 
-
   function showAuth() {
-    $('home-view').hidden = true;
+    hideAllViews();
+
     $('nav').hidden = true;
     $('auth-view').hidden = false;
   }
-
-
-  function hideAllViews() {
+  
+function hideAllViews() {
     [
       'auth-view',
       'welcome-view',
       'goals-view',
       'preferences-view',
       'background-view',
+      'home-view',
+      'feed-view',
+      'progress-view',
+      'plan-view',
       'profile-view',
-      'home-view'
+      'settings-view'
     ].forEach(id => {
       const element = $(id);
       if (element) element.hidden = true;
     });
   }
+
+
 
   // Onboarding flow functions
   function startOnboarding(user) {
@@ -209,46 +214,54 @@ $('background-back').addEventListener('click', () => {
 });
 
 $('background-next').addEventListener('click', () => {
-    const error = $('background-error');
-    error.hidden = true;
+  const error = $('background-error');
+  error.hidden = true;
 
-    const experience = document.querySelector(
-      'input[name="fitnessExperience"]:checked'
-    );
+  const experience = document.querySelector(
+    'input[name="fitnessExperience"]:checked'
+  );
 
-    const activity = document.querySelector(
-      'input[name="activityLevel"]:checked'
-    );
+  const activity = document.querySelector(
+    'input[name="activityLevel"]:checked'
+  );
 
-    const equipment = getValues('equipment');
+  const equipment = getValues('equipment');
 
-    if (!experience || !activity) {
-      error.textContent =
-        'Please answer your fitness experience and activity level.';
-      error.hidden = false;
-      return;
-    }
+  if (!experience || !activity) {
+    error.textContent =
+      'Please answer your fitness experience and activity level.';
+    error.hidden = false;
+    return;
+  }
 
-    if (!equipment.length) {
-      error.textContent =
-        'Please select at least one equipment option.';
-      error.hidden = false;
-      return;
-    }
+  if (!equipment.length) {
+    error.textContent =
+      'Please select at least one equipment option.';
+    error.hidden = false;
+    return;
+  }
 
-    onboardingData.background = {
-      experience: experience.value,
-      activity: activity.value,
-      equipment,
-      favoriteExercises: $('favorite-exercises').value.trim(),
-      dislikedExercises: $('disliked-exercises').value.trim()
-    };
+  // Save the final onboarding answers
+  onboardingData.background = {
+    experience: experience.value,
+    activity: activity.value,
+    equipment: equipment
+  };
 
-    console.log('Complete onboarding data:', onboardingData);
+  console.log('Complete onboarding data:', onboardingData);
 
-    $('background-view').hidden = true;
-    $('profile-view').hidden = false;
-  });
+  // Finish onboarding and open dashboard
+  hideAllViews();
+
+  $('nav').hidden = false;
+  $('nav-user').textContent = newUser.username;
+  $('welcome').textContent = `Welcome, ${newUser.username}`;
+
+  showPage('home');
+
+  // Clear temporary onboarding state
+  newUser = null;
+});
 
 
   function showPage(page) {

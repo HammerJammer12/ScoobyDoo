@@ -1,100 +1,674 @@
+/* =========================
+   GLOBAL TYPOGRAPHY
+========================= */
+
+body {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+}
+
+/* Navigation brand */
+.brand {
+    font-size: 23px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+/* Navigation links */
+.nav-link {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+/* Buttons */
+button {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+}
+
+/* Inputs */
+input, textarea, select {
+    font-family: 'Inter', sans-serif;
+}
+
+
+/* =========================================
+   ONBOARDING / INTRO SURVEY
+========================================= */
+
+:root {
+    --green: #8be28b;
+    --green-dark: #399b4d;
+    --dark: #151a18;
+    --text: #202923;
+    --muted: #778078;
+    --border: #e7ebe7;
+    --surface: #f7f9f6;
+}
+
+/* Main onboarding background */
+
+#auth-view,
+#welcome-view,
+#goals-view,
+#preferences-view,
+#background-view {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Main card */
 
 .onboarding-card {
-  max-width: 620px;
-  margin: 40px auto;
+    width: 100%;
+    max-width: 650px;
+    margin: 45px auto;
+    padding: 42px;
+
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+
+    box-shadow:
+        0 2px 8px rgba(21, 26, 24, 0.03),
+        0 12px 35px rgba(21, 26, 24, 0.06);
+
+    box-sizing: border-box;
 }
+
+/* =========================================
+   HEADINGS AND TEXT
+========================================= */
+
+.onboarding-card h1 {
+    color: var(--dark);
+    font-size: 29px;
+    font-weight: 800;
+    letter-spacing: -1.1px;
+    line-height: 1.2;
+    margin: 22px 0 12px;
+}
+
+.onboarding-card h3 {
+    color: var(--dark);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.35px;
+    margin: 30px 0 13px;
+}
+
+.onboarding-card > p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.75;
+}
+
+.onboarding-card .muted {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* =========================================
+   EYEBROW
+========================================= */
 
 .eyebrow {
-  font-size: 12px;
-  letter-spacing: 2px;
-  font-weight: 700;
-  color: #16a34a;
+    display: inline-block;
+    color: #399b4d;
+    background: #eff9ee;
+
+    padding: 8px 12px;
+    border-radius: 6px;
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
 }
 
+/* =========================================
+   PROGRESS INDICATOR
+========================================= */
+
 .onboarding-progress {
-  margin-bottom: 25px;
-  font-size: 12px;
-  color: #888;
+    margin-bottom: 32px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
 }
 
 .progress-track {
-  height: 6px;
-  background: #e5e5e5;
-  border-radius: 10px;
-  margin-top: 10px;
-  overflow: hidden;
+    height: 7px;
+    background: #edf1ed;
+    border-radius: 20px;
+    margin-top: 12px;
+    overflow: hidden;
 }
 
 .progress-fill {
-  height: 100%;
-  background: #16a34a;
-  transition: width 0.3s ease;
+    height: 100%;
+    background: var(--green-dark);
+    border-radius: 20px;
+    transition: width 0.35s ease;
 }
 
+/* =========================================
+   GOAL CARDS
+========================================= */
+
 .goal-card {
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  padding: 16px;
-  margin: 14px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    padding: 18px 20px;
+    margin: 12px 0;
+
+    transition: all 0.2s ease;
+}
+
+.goal-card:hover {
+    border-color: #b8dcb8;
+    background: #fbfefb;
+}
+
+.goal-card:has(> label > input:checked) {
+    background: #f0f9ef;
+    border-color: var(--green-dark);
+    box-shadow: 0 0 0 2px rgba(57, 155, 77, 0.06);
 }
 
 .goal-card > label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    color: var(--dark);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
 }
 
-.goal-card input {
-  accent-color: #16a34a;
+/* =========================================
+   CUSTOM CHECKBOXES AND RADIO BUTTONS
+========================================= */
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+
+    accent-color: var(--green-dark);
+    cursor: pointer;
+    flex-shrink: 0;
 }
+
+/* =========================================
+   EXPANDABLE DETAILS
+========================================= */
 
 .goal-details {
-  margin-top: 16px;
-  padding: 14px;
-  border-radius: 8px;
-  background: #f5f7f5;
+    margin-top: 18px;
+    padding: 18px 0 0;
+
+    border-top: 1px solid #dce9dc;
+    background: transparent;
 }
 
 .goal-details[hidden] {
-  display: none;
+    display: none;
 }
 
 .goal-details p {
-  font-weight: 600;
-  font-size: 14px;
+    color: var(--dark);
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 14px;
 }
 
+/* =========================================
+   OPTION GRID
+========================================= */
+
 .goal-options {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin: 14px 0;
 }
 
 .goal-options label,
 .goal-details > label {
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 12px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 500;
+
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
+.goal-options label:hover,
+.goal-details > label:hover {
+    background: #f0f9ef;
+    border-color: #b8dcb8;
+}
+
+.goal-options label:has(input:checked),
+.goal-details > label:has(input:checked) {
+    background: #eff9ee;
+    border-color: var(--green-dark);
+    color: #287c39;
+}
+
+/* =========================================
+   SELECT INPUTS
+========================================= */
+
+.onboarding-card select {
+    width: 100%;
+    padding: 14px 15px;
+
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    background: #f9faf8;
+    color: var(--dark);
+
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+
+    transition: border 0.2s ease;
+}
+
+.onboarding-card select:focus {
+    border-color: var(--green-dark);
+    box-shadow: 0 0 0 3px rgba(57, 155, 77, 0.1);
+}
+
+/* =========================================
+   TEXT INPUTS AND TEXTAREAS
+========================================= */
+
+.onboarding-card textarea,
+.onboarding-card input:not([type="checkbox"]):not([type="radio"]) {
+    font-family: inherit;
+}
+
+.onboarding-card textarea {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 13px 15px;
+    margin: 8px 0 18px;
+
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    background: #f9faf8;
+    color: var(--dark);
+
+    font-size: 13px;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+}
+
+.onboarding-card textarea:focus {
+    border-color: var(--green-dark);
+    box-shadow: 0 0 0 3px rgba(57, 155, 77, 0.1);
+}
+
+.onboarding-card textarea::placeholder {
+    color: #a0aaa2;
+}
+
+/* Labels for textareas */
+
+.onboarding-card label[for] {
+    display: block;
+    color: var(--dark);
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 15px;
+}
+
+/* =========================================
+   NAVIGATION BUTTONS
+========================================= */
+
 .onboarding-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 25px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 35px;
 }
 
 .onboarding-actions button {
-  padding: 12px 22px;
-  border-radius: 8px;
-  cursor: pointer;
+    padding: 13px 24px;
+    border-radius: 9px;
+
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    transition: all 0.2s ease;
 }
 
-@media (max-width: 480px) {
-  .goal-options {
-    grid-template-columns: 1fr;
-  }
+/* Back button */
+
+.onboarding-actions button:not(.primary) {
+    background: #ffffff;
+    color: var(--dark);
+    border: 1px solid var(--border);
+}
+
+.onboarding-actions button:not(.primary):hover {
+    background: #f4f6f3;
+    border-color: #cbd4cb;
+}
+
+/* Primary buttons */
+
+.primary {
+    background: var(--dark);
+    color: #ffffff;
+    border: 1px solid var(--dark);
+    padding: 14px 25px;
+    border-radius: 9px;
+
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.primary:hover {
+    background: #29352d;
+    transform: translateY(-1px);
+}
+
+/* Welcome button */
+
+.onboarding-card > .primary {
+    background: var(--green);
+    color: var(--dark);
+    border-color: var(--green);
+    margin-top: 12px;
+}
+
+.onboarding-card > .primary:hover {
+    background: #72d572;
+}
+
+/* =========================================
+   ERROR MESSAGES
+========================================= */
+
+.error {
+    color: #dc4545;
+    background: #fff2f1;
+    border: 1px solid #f5d5d2;
+
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    margin-top: 15px;
+}
+
+/* =========================================
+   RESPONSIVE DESIGN
+========================================= */
+
+@media (max-width: 650px) {
+
+    main {
+        padding: 20px 14px 50px;
+    }
+
+    .onboarding-card {
+        padding: 27px 21px;
+        margin: 20px auto;
+        border-radius: 15px;
+    }
+
+    .onboarding-card h1 {
+        font-size: 25px;
+    }
+
+    .onboarding-card h3 {
+        font-size: 15px;
+    }
+
+    .goal-options {
+        grid-template-columns: 1fr;
+    }
+
+    .onboarding-actions button {
+        padding: 12px 18px;
+    }
+}
+
+@media (max-width: 380px) {
+
+    .onboarding-card {
+        padding: 23px 16px;
+    }
+
+    .onboarding-card h1 {
+        font-size: 22px;
+    }
+
+    .onboarding-actions button {
+        padding: 11px 14px;
+        font-size: 12px;
+    }
+}
+
+
+
+/* =========================
+   NAVIGATION BAR
+========================= */
+
+.topbar {
+    width: 100%;
+    min-height: 75px;
+    background: #151a18;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6%;
+    box-sizing: border-box;
+
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    border-bottom: 1px solid #29332e;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Brand */
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.brand {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 23px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    transition: color 0.3s ease;
+}
+
+.brand:hover {
+    color: #8be28b;
+}
+
+/* Navigation links */
+
+.main-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Individual links */
+
+.nav-link {
+    color: #b8c2bc;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+
+    padding: 11px 16px;
+    border-radius: 8px;
+
+    transition: all 0.25s ease;
+}
+
+/* Hover effect */
+
+.nav-link:hover {
+    color: #8be28b;
+    background: rgba(139, 226, 139, 0.1);
+}
+
+/* Active navigation link */
+
+.nav-link.active {
+    color: #151a18;
+    background: #8be28b;
+    font-weight: 700;
+}
+
+/* User section */
+
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    margin-left: 20px;
+    padding-left: 20px;
+    border-left: 1px solid #39443e;
+}
+
+/* Username */
+
+#nav-user {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Logout button */
+
+.link-btn {
+    background: transparent;
+    border: 1px solid #8be28b;
+    color: #8be28b;
+
+    padding: 9px 15px;
+    border-radius: 7px;
+
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    transition: all 0.25s ease;
+}
+
+.link-btn:hover {
+    background: #8be28b;
+    color: #151a18;
+}
+
+/* =========================
+   RESPONSIVE NAVIGATION
+========================= */
+
+@media (max-width: 900px) {
+
+    .topbar {
+        padding: 15px 4%;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .main-nav {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .nav-link {
+        padding: 9px 11px;
+        font-size: 13px;
+    }
+
+    .nav-user {
+        margin-left: 0;
+        padding-left: 12px;
+    }
+}
+
+@media (max-width: 550px) {
+
+    .topbar {
+        align-items: center;
+    }
+
+    .brand {
+        font-size: 21px;
+    }
+
+    .main-nav {
+        gap: 6px;
+    }
+
+    .nav-link {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .nav-user {
+        width: 100%;
+        justify-content: center;
+        border-left: none;
+        border-top: 1px solid #39443e;
+        padding: 12px 0 0;
+    }
+}
+
+/* Keep hidden navigation hidden */
+
+.main-nav[hidden] {
+    display: none;
 }

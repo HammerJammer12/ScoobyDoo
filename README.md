@@ -22,6 +22,10 @@
    ```
    npm start
    ```
+5. Load the exercise library (about 870 exercises, safe to re-run):
+   ```
+   npm run seed:exercises
+   ```
 
 ## Environment variables
 
@@ -31,12 +35,17 @@
 | `DATABASE_SSL` | on the host | Set to `true` when the database requires SSL. Should be left unset locally |
 | `NODE_ENV` | on the host | Set to `production` when serving over HTTPS so session cookies require HTTPS. Leave unset for local HTTP. |
 | `PORT` | no | Server port, default 3000 |
+| `EXERCISE_DATASET_URL` | no | Override the dataset used by `npm run seed:exercises` |
 
 ## Project structure
 
 ```
 server.js     Express authentication, sessions, and file serving
 db.js         Everything sql and database
+routes/       Express routers mounted from server.js 
+scripts/      One-off scripts (exercise seeding)
+lib/          Logic with no database access (plan recommendations)
+test/         Tests, run with npm test
 public/       Front end display logic
 routes/       API route modules
 data/         Example lifts for the opt-in demo seed
@@ -61,6 +70,15 @@ docs/         Project plan (PLAN.md) and Excalidraw diagram
 | POST | `/api/posts` | Save `{ content, bodyPart }`; optional `workoutId` also supported |
 | PUT | `/api/posts/:id/like` | Like a visible post (idempotent) |
 | DELETE | `/api/posts/:id/like` | Remove own like |
+| GET | `/api/settings` | Username, privacy setting and join date for the settings page |
+| PATCH | `/api/settings/username` | Change username (`{ username }`, 409 if taken) |
+| PATCH | `/api/settings/password` | Change password (`{ currentPassword, newPassword, confirmPassword }`), logs out other sessions |
+| PATCH | `/api/settings/privacy` | Set profile visibility (`{ isPrivate }`, friends-only by default) |
+| POST | `/api/settings/logout-others` | End every session except the current one |
+| DELETE | `/api/settings/account` | Delete the account (`{ password }`) and everything that belongs to it |
+| GET | `/api/exercises?q=&muscle=&equipment=&limit=&offset=` | Search the exercise library (limit default 25, max 100) |
+
+Exercise data comes from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain).
 
 All workout/post endpoints require a session. Workouts are scoped to their owner;
 workout tags are checked on the server before saving. Feed queries include only

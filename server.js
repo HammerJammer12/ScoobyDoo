@@ -39,6 +39,7 @@ async function startSession(res, userId) {
 
 async function loadUser(req, _res, next) {
   req.user = null;
+  req.sessionTokenHash = null;
   const token = req.cookies[COOKIE_NAME];
   if (token) {
     const { rows } = await pool.query(
@@ -52,6 +53,7 @@ async function loadUser(req, _res, next) {
         [s.user_id]
       );
       req.user = result.rows[0] || null;
+      req.sessionTokenHash = hashToken(token); // lets settings routes keep the current session
     }
   }
   next();
@@ -155,6 +157,33 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
   res.json(await getDashboard(req.user.id));
 });
 app.use('/api', requireAuth, require('./routes/posts'));
+app.use('/api/settings', requireAuth, require('./routes/settings'));
+
+const EXERCISE_IMAGE_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+
+// Search the exercise library, e.g. /api/exercises?q=curl&muscle=biceps&equipment=dumbbell
+app.get('/api/exercises', async (req, res) => {
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 25, 1), 100);
+  const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+  const { rows } = await pool.query(
+    `SELECT id, name, primary_muscle, secondary_muscles, equipment, mechanic, force, level,
+            category, tracking_type, instructions, image_paths
+       FROM exercises
+      WHERE ($1::text IS NULL OR strpos(lower(name), lower($1)) > 0)
+        AND ($2::text IS NULL OR primary_muscle = lower($2))
+        AND ($3::text IS NULL OR equipment = lower($3))
+      ORDER BY name
+      LIMIT $4 OFFSET $5`,
+    [str(req.query.q), str(req.query.muscle), str(req.query.equipment), limit, offset]
+  );
+  res.json({
+    exercises: rows.map(({ image_paths, ...e }) => ({
+      ...e,
+      images: image_paths.map((p) => EXERCISE_IMAGE_BASE + p),
+    })),
+  });
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 

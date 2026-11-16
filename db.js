@@ -6,6 +6,29 @@ const pool = new Pool({
 });
 
 //TODO: split table inits into migration files once schemas are finalised 
+// Renames tables/columns created with the old "excercise" spelling so existing local databases keep working
+const RENAME_LEGACY = `
+  DO $$
+  DECLARE r RECORD;
+  BEGIN
+    FOR r IN SELECT * FROM (VALUES
+      ('excercises', 'exercises'),
+      ('template_excercises', 'template_exercises'),
+      ('workout_excercises', 'workout_exercises')
+    ) AS t(old_name, new_name) LOOP
+      IF to_regclass(r.old_name) IS NOT NULL AND to_regclass(r.new_name) IS NULL THEN
+        EXECUTE format('ALTER TABLE %I RENAME TO %I', r.old_name, r.new_name);
+      END IF;
+    END LOOP;
+
+    FOR r IN SELECT table_name, column_name FROM information_schema.columns
+             WHERE table_schema = current_schema() AND column_name LIKE '%excercise%' LOOP
+      EXECUTE format('ALTER TABLE %I RENAME COLUMN %I TO %I',
+        r.table_name, r.column_name, replace(r.column_name, 'excercise', 'exercise'));
+    END LOOP;
+  END $$;
+`;
+
 async function init() {
   // Match the exercise naming used by the team's newer feature branches.
   await pool.query(`
@@ -33,6 +56,7 @@ async function init() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
     CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower ON users (lower(username));
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT true;
 
     CREATE TABLE IF NOT EXISTS sessions (
       token TEXT PRIMARY KEY,
@@ -49,6 +73,18 @@ async function init() {
     );
 
     ALTER TABLE exercises ADD COLUMN IF NOT EXISTS secondary_muscles TEXT[] NOT NULL DEFAULT '{}';
+    -- Library metadata, filled by scripts/seed-exercises.js (ADD COLUMN so existing databases pick these up)
+    ALTER TABLE exercises
+      ADD COLUMN IF NOT EXISTS source_id TEXT UNIQUE,
+      ADD COLUMN IF NOT EXISTS secondary_muscles TEXT[] NOT NULL DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS equipment TEXT,
+      ADD COLUMN IF NOT EXISTS mechanic TEXT,
+      ADD COLUMN IF NOT EXISTS force TEXT,
+      ADD COLUMN IF NOT EXISTS level TEXT,
+      ADD COLUMN IF NOT EXISTS category TEXT,
+      ADD COLUMN IF NOT EXISTS instructions TEXT[] NOT NULL DEFAULT '{}',
+      ADD COLUMN IF NOT EXISTS image_paths TEXT[] NOT NULL DEFAULT '{}';
+    CREATE INDEX IF NOT EXISTS idx_exercises_primary_muscle ON exercises(primary_muscle);
 
     CREATE TABLE IF NOT EXISTS workout_templates (
       id SERIAL PRIMARY KEY,

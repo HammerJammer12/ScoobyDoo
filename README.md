@@ -76,7 +76,7 @@ docs/         Project plan (PLAN.md) and Excalidraw diagram
 | GET | `/api/exercises?q=&muscle=&equipment=&limit=&offset=` | Search the exercise library (limit default 25, max 100) |
 | GET | `/api/exercises/:id/alternatives?level=&equipment=&exclude=&limit=` | Exercises to swap in for this one (same muscle) |
 | POST | `/api/recommendations/plan` | Preview a weekly plan (login required, nothing saved) |
-| POST | `/api/plans` | Save a plan as one workout template per day (login required) |
+| POST | `/api/recommendations/save` | Save a previewed plan as one workout template per day (login required) |
 
 Exercise data comes from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain).
 
@@ -100,7 +100,7 @@ and `duration_secs` (timed exercises have no reps). Exercises from the user's la
 To swap one, call `/api/exercises/:id/alternatives` with the same `level` and `equipment` (comma-separated), and
 `exclude` set to the ids already in that day.
 
-To save, `POST /api/plans` with `{ name, days }`, where `days` is the (edited) `plan.days`. Only `name`,
+To save, `POST /api/recommendations/save` with `{ name, days }`, where `days` is the (edited) `plan.days`. Only `name`,
 `exercises[].exercise_id`, `sets`, `rep_min`, `rep_max` and `duration_secs` are read, so other fields can be
 dropped to stay under the 10 KB request limit. Each day becomes a workout template named `<plan name> - <day name>`,
 with the top of the rep range as its target reps.

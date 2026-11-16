@@ -123,6 +123,17 @@ async function init() {
       name TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS workout_plans (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL CHECK (char_length(trim(name)) BETWEEN 1 AND 80),
+      type TEXT NOT NULL CHECK (type IN ('weekly', 'monthly')),
+      start_date DATE NOT NULL,
+      days JSONB NOT NULL CHECK (jsonb_typeof(days) = 'array'),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS idx_workout_plans_user ON workout_plans(user_id);
+
     CREATE TABLE IF NOT EXISTS workout_exercises (
       id SERIAL PRIMARY KEY,
       workout_id INTEGER NOT NULL REFERENCES workouts(id) ON DELETE CASCADE,

@@ -111,17 +111,6 @@ async function init() {
       name TEXT NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS workout_plans (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      name TEXT NOT NULL CHECK (char_length(trim(name)) BETWEEN 1 AND 80),
-      type TEXT NOT NULL CHECK (type IN ('weekly', 'monthly')),
-      start_date DATE NOT NULL,
-      days JSONB NOT NULL CHECK (jsonb_typeof(days) = 'array'),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
-    CREATE INDEX IF NOT EXISTS idx_workout_plans_user ON workout_plans(user_id);
-
     CREATE TABLE IF NOT EXISTS workout_exercises (
       id SERIAL PRIMARY KEY,
       workout_id INTEGER NOT NULL REFERENCES workouts(id) ON DELETE CASCADE,
@@ -149,6 +138,17 @@ async function init() {
       date_achieved DATE DEFAULT CURRENT_DATE
     );
 
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_exercises_name ON exercises (lower(name));
+
+INSERT INTO exercises (name, primary_muscle, tracking_type) VALUES
+  ('Barbell Back Squat', 'quads', 'weight_and_reps'),
+  ('Bench Press', 'chest', 'weight_and_reps'),
+  ('Deadlift', 'back', 'weight_and_reps'),
+  ('Overhead Press', 'shoulders', 'weight_and_reps'),
+  ('Pull-up', 'back', 'reps_only'),
+  ('Plank', 'core', 'duration'),
+  ('Running', 'legs', 'distance')
+ON CONFLICT DO NOTHING;
     CREATE TABLE IF NOT EXISTS friendships (
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       friend_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -204,6 +204,7 @@ async function init() {
     ) ON CONFLICT (user_id, friend_id) DO UPDATE SET status = 'accepted';
   `);
 }
+//remove this insert once we got the api hooked up
 
 // One summary per workout; the first exercise supplies its muscle metadata.
 const WORKOUT_SELECT = `

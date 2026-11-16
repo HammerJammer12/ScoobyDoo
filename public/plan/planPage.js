@@ -6,6 +6,7 @@
     'exercise ball', 'e-z curl bar', 'foam roll', 'other'];
 
   let plan = null; // the previewed plan, edited in place
+  let planName = 'My Plan'; // kept across re-renders
 
   async function api(method, url, body) {
     const res = await fetch(url, {
@@ -131,8 +132,36 @@
       el('ul', { className: 'exercises' }, ...day.exercises.map((e, i) => renderExercise(day, e, i))));
   }
 
+  function renderSave() {
+    const nameInput = el('input', {
+      type: 'text', maxLength: 100, value: planName, autocomplete: 'off',
+      oninput: () => { planName = nameInput.value; },
+    });
+    const btn = el('button', { type: 'submit', className: 'primary', textContent: 'Save plan' });
+    const msg = el('p', { className: 'msg', role: 'status', hidden: true });
+    const form = el('form', {},
+      el('div', { className: 'save-row' }, el('label', {}, 'Plan name', nameInput), btn),
+      el('p', { className: 'hint', textContent: 'Each day is saved as a workout template you can start later.' }),
+      msg);
+
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      showMsg(msg, '');
+      btn.disabled = true;
+      try {
+        const { plan: saved } = await api('POST', '/api/plans', { name: nameInput.value.trim(), days: plan.days });
+        showMsg(msg, `Saved ${saved.templates.length} workouts: ${saved.templates.map((t) => t.name).join(', ')}.`, true);
+      } catch (ex) {
+        showMsg(msg, ex.message, false);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+    return el('section', { className: 'card' }, el('h2', { textContent: 'Save this plan' }), form);
+  }
+
   function render() {
-    $('plan').replaceChildren(...(plan ? plan.days.map(renderDay) : []));
+    $('plan').replaceChildren(...(plan ? [...plan.days.map(renderDay), renderSave()] : []));
   }
 
   function readPrefs() {

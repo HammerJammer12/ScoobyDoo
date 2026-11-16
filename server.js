@@ -151,6 +151,7 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
 
+app.use('/api', requireAuth, require('./routes/workouts'))
 app.use('/api/plans', requireAuth, require('./routes/plans'));
 app.use('/api/workouts', requireAuth, require('./routes/workout-views'));
 app.get('/api/dashboard', requireAuth, async (req, res) => {

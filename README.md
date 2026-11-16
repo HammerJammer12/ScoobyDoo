@@ -59,7 +59,7 @@ docs/         Project plan (PLAN.md) and Excalidraw diagram
 | POST | `/api/login` | Log in |
 | POST | `/api/logout` | Log out |
 | GET | `/api/me` | Current user (401 if logged out) |
-| GET | `/api/dashboard` | Own saved-workout, logged-set, and PR counts, plus latest 3 saved workouts |
+| GET | `/api/dashboard` | Own saved-workout, logged-set, and PR counts, latest 3 saved workouts, recent PRs (kg) and the user's `weightUnit` |
 | GET | `/api/workouts` | Signed-in user's saved workouts |
 | GET | `/api/workouts/:id` | Own workout with muscle metadata and recorded sets |
 | GET | `/api/feed` | Latest 50 posts from self and accepted friends |
@@ -67,10 +67,11 @@ docs/         Project plan (PLAN.md) and Excalidraw diagram
 | POST | `/api/posts` | Save `{ content, bodyPart }`; optional `workoutId` also supported |
 | PUT | `/api/posts/:id/like` | Like a visible post (idempotent) |
 | DELETE | `/api/posts/:id/like` | Remove own like |
-| GET | `/api/settings` | Username, privacy setting and join date for the settings page |
+| GET | `/api/settings` | Username, privacy setting, weight unit and join date for the settings page |
 | PATCH | `/api/settings/username` | Change username (`{ username }`, 409 if taken) |
 | PATCH | `/api/settings/password` | Change password (`{ currentPassword, newPassword, confirmPassword }`), logs out other sessions |
 | PATCH | `/api/settings/privacy` | Set profile visibility (`{ isPrivate }`, friends-only by default) |
+| PATCH | `/api/settings/weight-unit` | Set display unit for weights (`{ weightUnit: 'lb' \| 'kg' }`, lb by default). Weights in the API are always kg |
 | POST | `/api/settings/logout-others` | End every session except the current one |
 | DELETE | `/api/settings/account` | Delete the account (`{ password }`) and everything that belongs to it |
 | GET | `/api/exercises?q=&muscle=&equipment=&limit=&offset=` | Search the exercise library (limit default 25, max 100) |

@@ -81,6 +81,14 @@ test('PostgreSQL posts, tags, feed visibility, and likes', { skip: !databaseUrl 
         assert.equal(dashboard.data.recentAchievements.length, 1);
         assert.equal(dashboard.data.recentAchievements[0].exercise_name, 'Dumbbell Curl');
         assert.equal(dashboard.data.recentAchievements[0].value, 20);
+        // The page converts PR values from kg, so it needs the viewer's unit alongside them
+        assert.equal(dashboard.data.weightUnit, 'lb');
+        await db.pool.query("UPDATE users SET weight_unit='kg' WHERE id=$1", [users[0].id]);
+        try {
+          assert.equal((await request('/api/dashboard')).data.weightUnit, 'kg');
+        } finally {
+          await db.pool.query("UPDATE users SET weight_unit='lb' WHERE id=$1", [users[0].id]);
+        }
         const other = (await request('/api/dashboard', { user: 1 })).data;
         assert.deepEqual(other.summary, { saved_workouts: 1, logged_sets: 0, personal_records: 0 });
         assert.deepEqual(other.recentWorkouts.map(w => w.id), [String(workoutIds[1])]);

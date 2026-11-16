@@ -49,7 +49,7 @@ async function loadUser(req, _res, next) {
     const s = rows[0];
     if (s && Number(s.expires_at) > Date.now()) {
       const result = await pool.query(
-        'SELECT id, username, created_at FROM users WHERE id = $1',
+        'SELECT id, username, created_at, weight_unit FROM users WHERE id = $1',
         [s.user_id]
       );
       req.user = result.rows[0] || null;
@@ -155,7 +155,7 @@ app.use('/api', requireAuth, require('./routes/workouts'))
 app.use('/api/plans', requireAuth, require('./routes/plans'));
 app.use('/api/workouts', requireAuth, require('./routes/workout-views'));
 app.get('/api/dashboard', requireAuth, async (req, res) => {
-  res.json(await getDashboard(req.user.id));
+  res.json({ ...await getDashboard(req.user.id), weightUnit: req.user.weight_unit });
 });
 app.use('/api', requireAuth, require('./routes/posts'));
 app.use('/api/settings', requireAuth, require('./routes/settings'));

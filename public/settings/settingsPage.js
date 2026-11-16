@@ -44,6 +44,7 @@
     $('member-since').textContent = `Member since ${since}.`;
     const value = settings.isPrivate ? 'private' : 'public';
     document.querySelector(`input[name="privacy"][value="${value}"]`).checked = true;
+    document.querySelector(`input[name="weight-unit"][value="${settings.weightUnit}"]`).checked = true;
   }
 
   onSubmit($('username-form'), async () => {
@@ -69,6 +70,13 @@
     if (!choice) throw new Error('Pick an option.');
     await api('PATCH', '/api/settings/privacy', { isPrivate: choice.value === 'private' });
     return 'Privacy saved.';
+  });
+
+  onSubmit($('units-form'), async () => {
+    const choice = document.querySelector('input[name="weight-unit"]:checked');
+    if (!choice) throw new Error('Pick an option.');
+    await api('PATCH', '/api/settings/weight-unit', { weightUnit: choice.value });
+    return 'Units saved.';
   });
 
   onSubmit($('sessions-form'), async () => {

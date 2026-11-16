@@ -1,4 +1,7 @@
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
+
+// pg returns NUMERIC (OID 1700) as strings to avoid precision loss; our weights are 3-decimal kg, safe as JS numbers
+types.setTypeParser(1700, parseFloat);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL, // postgres://user:pass@localhost:5432/liftlog
@@ -26,6 +29,14 @@ const RENAME_LEGACY = `
       EXECUTE format('ALTER TABLE %I RENAME COLUMN %I TO %I',
         r.table_name, r.column_name, replace(r.column_name, 'excercise', 'exercise'));
     END LOOP;
+
+    -- target_weight was unitless; it is kg like workout_sets.weight_kgs
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema()
+               AND table_name = 'template_exercises' AND column_name = 'target_weight')
+       AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema()
+               AND table_name = 'template_exercises' AND column_name = 'target_weight_kgs') THEN
+      ALTER TABLE template_exercises RENAME COLUMN target_weight TO target_weight_kgs;
+    END IF;
   END $$;
 `;
 
@@ -57,6 +68,7 @@ async function init() {
     );
     CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower ON users (lower(username));
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT true;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS weight_unit TEXT NOT NULL DEFAULT 'lb' CHECK (weight_unit IN ('lb', 'kg'));
 
     CREATE TABLE IF NOT EXISTS sessions (
       token TEXT PRIMARY KEY,
@@ -99,7 +111,7 @@ async function init() {
       position_in_workout INTEGER NOT NULL,
       target_sets INTEGER,
       target_reps INTEGER,
-      target_weight INTEGER,
+      target_weight_kgs NUMERIC(8,3),
       target_duration INTEGER,
       target_distance INTEGER
     );
@@ -110,6 +122,17 @@ async function init() {
       template_id INTEGER REFERENCES workout_templates(id) ON DELETE SET NULL,
       name TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS workout_plans (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL CHECK (char_length(trim(name)) BETWEEN 1 AND 80),
+      type TEXT NOT NULL CHECK (type IN ('weekly', 'monthly')),
+      start_date DATE NOT NULL,
+      days JSONB NOT NULL CHECK (jsonb_typeof(days) = 'array'),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS idx_workout_plans_user ON workout_plans(user_id);
 
     CREATE TABLE IF NOT EXISTS workout_exercises (
       id SERIAL PRIMARY KEY,
@@ -122,7 +145,7 @@ async function init() {
       id SERIAL PRIMARY KEY,
       workout_exercise_id INTEGER NOT NULL REFERENCES workout_exercises(id) ON DELETE CASCADE,
       set_number INTEGER NOT NULL,
-      weight_kgs INTEGER,
+      weight_kgs NUMERIC(8,3),
       reps INTEGER,
       duration_secs INTEGER,
       distance_meters INTEGER
@@ -134,9 +157,14 @@ async function init() {
       exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
       set_id INTEGER NOT NULL REFERENCES workout_sets(id) ON DELETE CASCADE,
       record_type TEXT NOT NULL CHECK(record_type in ('max_weight', 'max_reps', 'max_set_volume', 'max_est_1rm')),
-      value INTEGER NOT NULL,
+      value NUMERIC(8,3) NOT NULL, -- kg for weight/volume/1rm records, a count for max_reps
       date_achieved DATE DEFAULT CURRENT_DATE
     );
+
+    -- Existing databases created these as INTEGER; decimals let lb entries round-trip exactly
+    ALTER TABLE workout_sets ALTER COLUMN weight_kgs TYPE NUMERIC(8,3);
+    ALTER TABLE template_exercises ALTER COLUMN target_weight_kgs TYPE NUMERIC(8,3);
+    ALTER TABLE personal_records ALTER COLUMN value TYPE NUMERIC(8,3);
 
     CREATE UNIQUE INDEX IF NOT EXISTS ux_exercises_name ON exercises (lower(name));
 

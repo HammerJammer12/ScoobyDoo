@@ -68,7 +68,7 @@ window.createDashboardView = (api) => {
     suggestion.load([$('dashboard-suggestion')]);
     status.textContent = 'Loading your dashboard…';
     try {
-      const { summary, recentWorkouts, recentAchievements } = await api('GET', '/api/dashboard');
+      const { summary, recentWorkouts, recentAchievements, weightUnit } = await api('GET', '/api/dashboard');
       if (activeVersion !== version) return;
       $('dashboard-workout-count').textContent = summary.saved_workouts;
       $('dashboard-set-count').textContent = summary.logged_sets;
@@ -83,8 +83,11 @@ window.createDashboardView = (api) => {
         badge.className = 'pr-badge';
         badge.textContent = 'PR';
         const text = document.createElement('span');
-        const units = record.record_type === 'max_reps' ? 'reps' : record.record_type === 'max_set_volume' ? 'kg total' : 'kg';
-        text.textContent = `${record.exercise_name}: ${record.value} ${units}`;
+        // max_reps is a count; every other record type is stored in kg and shown in the user's unit
+        const amount = record.record_type === 'max_reps'
+          ? `${record.value} reps`
+          : Units.formatWeight(record.value, weightUnit) + (record.record_type === 'max_set_volume' ? ' total' : '');
+        text.textContent = `${record.exercise_name}: ${amount}`;
         item.append(badge, text);
         $('dashboard-achievements').appendChild(item);
       }

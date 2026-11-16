@@ -42,15 +42,12 @@
 ```
 server.js     Express authentication, sessions, and file serving
 db.js         Everything sql and database
-routes/       Express routers mounted from server.js 
-scripts/      One-off scripts (exercise seeding)
+routes/       Express routers mounted from server.js
 lib/          Logic with no database access (plan recommendations)
-test/         Tests, run with npm test
-public/       Front end display logic
-routes/       API route modules
+scripts/      Exercise library seeding and development demo seeding
 data/         Example lifts for the opt-in demo seed
-scripts/      Development demo seeding
-test/         PostgreSQL integration tests
+test/         Unit and PostgreSQL integration tests, run with npm test
+public/       Front end display logic
 docs/         Project plan (PLAN.md) and Excalidraw diagram
 ```
 
@@ -77,8 +74,36 @@ docs/         Project plan (PLAN.md) and Excalidraw diagram
 | POST | `/api/settings/logout-others` | End every session except the current one |
 | DELETE | `/api/settings/account` | Delete the account (`{ password }`) and everything that belongs to it |
 | GET | `/api/exercises?q=&muscle=&equipment=&limit=&offset=` | Search the exercise library (limit default 25, max 100) |
+| GET | `/api/exercises/:id/alternatives?level=&equipment=&exclude=&limit=` | Exercises to swap in for this one (same muscle) |
+| POST | `/api/recommendations/plan` | Preview a weekly plan (login required, nothing saved) |
+| POST | `/api/recommendations/save` | Save a previewed plan as one workout template per day (login required) |
 
 Exercise data comes from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain).
+
+### Recommendations
+
+`POST /api/recommendations/plan` takes optional preferences:
+
+```json
+{ "goal": "hypertrophy", "daysPerWeek": 4, "minutesPerSession": 60, "level": "beginner", "equipment": ["dumbbell"] }
+```
+
+- `goal`: `strength`, `hypertrophy` (default) or `endurance`
+- `daysPerWeek`: 1–6 (default 3); `minutesPerSession`: 20–180 (default 60)
+- `level`: `beginner` (default), `intermediate` or `expert`
+- `equipment`: leave out for a full gym; bodyweight is always allowed
+
+It returns `{ plan: { ...preferences, split, days: [{ day, name, focus, exercises: [...] }] } }`. Each exercise has
+`exercise_id`, `name`, `primary_muscle`, `equipment`, `mechanic`, `tracking_type`, `sets`, `rep_min`, `rep_max`
+and `duration_secs` (timed exercises have no reps). Exercises from the user's last 5 workouts are avoided when possible.
+
+To swap one, call `/api/exercises/:id/alternatives` with the same `level` and `equipment` (comma-separated), and
+`exclude` set to the ids already in that day.
+
+To save, `POST /api/recommendations/save` with `{ name, days }`, where `days` is the (edited) `plan.days`. Only `name`,
+`exercises[].exercise_id`, `sets`, `rep_min`, `rep_max` and `duration_secs` are read, so other fields can be
+dropped to stay under the 10 KB request limit. Each day becomes a workout template named `<plan name> - <day name>`,
+with the top of the rep range as its target reps.
 
 All workout/post endpoints require a session. Workouts are scoped to their owner;
 workout tags are checked on the server before saving. Feed queries include only

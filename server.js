@@ -34,6 +34,7 @@ async function startSession(res, userId) {
 
 async function loadUser(req, _res, next) {
   req.user = null;
+  req.sessionTokenHash = null;
   const token = req.cookies[COOKIE_NAME];
   if (token) {
     const { rows } = await pool.query(
@@ -47,6 +48,7 @@ async function loadUser(req, _res, next) {
         [s.user_id]
       );
       req.user = result.rows[0] || null;
+      req.sessionTokenHash = hashToken(token); // lets settings routes keep the current session
     }
   }
   next();
@@ -119,6 +121,8 @@ app.post('/api/logout', async (req, res) => {
 app.get('/api/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
+
+app.use('/api/settings', requireAuth, require('./routes/settings'));
 
 const EXERCISE_IMAGE_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
 const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null);

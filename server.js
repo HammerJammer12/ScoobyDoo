@@ -154,7 +154,7 @@ app.get('/api/me', requireAuth, (req, res) => {
 app.use('/api/plans', requireAuth, require('./routes/plans'));
 app.use('/api/workouts', requireAuth, require('./routes/workout-views'));
 app.get('/api/dashboard', requireAuth, async (req, res) => {
-  res.json(await getDashboard(req.user.id));
+  res.json({ ...await getDashboard(req.user.id), weightUnit: req.user.weight_unit });
 });
 app.use('/api', requireAuth, require('./routes/posts'));
 app.use('/api/settings', requireAuth, require('./routes/settings'));

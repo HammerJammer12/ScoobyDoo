@@ -62,7 +62,7 @@ docs/         Project plan (PLAN.md) and Excalidraw diagram
 | POST | `/api/login` | Log in |
 | POST | `/api/logout` | Log out |
 | GET | `/api/me` | Current user (401 if logged out) |
-| GET | `/api/dashboard` | Own saved-workout, logged-set, and PR counts, plus latest 3 saved workouts |
+| GET | `/api/dashboard` | Own saved-workout, logged-set, and PR counts, latest 3 saved workouts, recent PRs (kg) and the user's `weightUnit` |
 | GET | `/api/workouts` | Signed-in user's saved workouts |
 | GET | `/api/workouts/:id` | Own workout with muscle metadata and recorded sets |
 | GET | `/api/feed` | Latest 50 posts from self and accepted friends |

@@ -149,7 +149,7 @@
       showMsg(msg, '');
       btn.disabled = true;
       try {
-        const { plan: saved } = await api('POST', '/api/plans', { name: nameInput.value.trim(), days: plan.days });
+        const { plan: saved } = await api('POST', '/api/recommendations/save', { name: nameInput.value.trim(), days: plan.days });
         showMsg(msg, `Saved ${saved.templates.length} workouts: ${saved.templates.map((t) => t.name).join(', ')}.`, true);
       } catch (ex) {
         showMsg(msg, ex.message, false);

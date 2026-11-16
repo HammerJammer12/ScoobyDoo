@@ -41,7 +41,7 @@ const LIBRARY_EMPTY = { error: 'Exercise library is empty. Run npm run seed:exer
 module.exports = function recommendationRoutes({ requireAuth }) {
   const router = express.Router();
 
-  // Preview a weekly plan. Nothing is saved until POST /api/plans.
+  // Preview a weekly plan. Nothing is saved until POST /api/recommendations/save.
   // Body: { goal, daysPerWeek, minutesPerSession, level, equipment } (all optional)
   router.post('/recommendations/plan', requireAuth, async (req, res) => {
     const { prefs, error } = parsePreferences(req.body);
@@ -83,7 +83,7 @@ module.exports = function recommendationRoutes({ requireAuth }) {
 
   // Save a plan (usually an edited preview) as one workout template per day.
   // Body: { name, days: [{ name, exercises: [{ exercise_id, sets, rep_min, rep_max, duration_secs }] }] }
-  router.post('/plans', requireAuth, async (req, res) => {
+  router.post('/recommendations/save', requireAuth, async (req, res) => {
     const { plan, error } = parsePlanToSave(req.body);
     if (error) return res.status(400).json({ error });
 

@@ -43,19 +43,92 @@
     return [e.primary_muscle, e.equipment].filter(Boolean).join(' · ');
   }
 
-  function renderExercise(e) {
-    return el('li', { className: 'exercise' },
-      el('div', { className: 'row' },
-        el('div', { className: 'info' },
-          el('div', { className: 'name', textContent: e.name }),
-          el('div', { className: 'meta', textContent: meta(e) })),
-        el('span', { className: 'rx', textContent: prescription(e) })));
+  // Same sets and reps rules the server uses (lib/recommend.js GOALS), so a swap keeps the plan consistent
+  const GOALS = {
+    strength: { compound: [5, 3, 6], isolation: [3, 6, 10], holdSecs: 30 },
+    hypertrophy: { compound: [4, 6, 10], isolation: [3, 10, 15], holdSecs: 45 },
+    endurance: { compound: [3, 12, 15], isolation: [2, 15, 20], holdSecs: 60 },
+  };
+
+  function prescribe(e, fallbackMechanic) {
+    const g = GOALS[plan.goal];
+    const heavy = (e.mechanic ?? fallbackMechanic) === 'compound' && e.tracking_type !== 'reps_only';
+    const [sets, repMin, repMax] = heavy ? g.compound : g.isolation;
+    const timed = e.tracking_type === 'duration';
+    return {
+      sets,
+      rep_min: timed ? null : repMin,
+      rep_max: timed ? null : repMax,
+      duration_secs: timed ? g.holdSecs : null,
+    };
+  }
+
+  function swap(day, index, alt) {
+    const old = day.exercises[index];
+    day.exercises[index] = {
+      exercise_id: alt.id,
+      name: alt.name,
+      primary_muscle: alt.primary_muscle,
+      equipment: alt.equipment,
+      mechanic: alt.mechanic,
+      tracking_type: alt.tracking_type,
+      ...prescribe(alt, old.mechanic),
+    };
+    render();
+  }
+
+  async function toggleAlternatives(li, day, index, btn) {
+    const open = li.querySelector('.alts');
+    if (open) { open.remove(); return; }
+
+    const usedIds = plan.days.flatMap((d) => d.exercises.map((x) => x.exercise_id));
+    const params = new URLSearchParams({ level: plan.level, exclude: usedIds.join(','), limit: '8' });
+    if (plan.equipment) params.set('equipment', plan.equipment.join(','));
+
+    btn.disabled = true;
+    try {
+      const { alternatives } = await api('GET', `/api/exercises/${day.exercises[index].exercise_id}/alternatives?${params}`);
+      const list = el('ul', { className: 'alts' });
+      if (!alternatives.length) list.append(el('li', { className: 'meta', textContent: 'No other options for this muscle.' }));
+      for (const alt of alternatives) {
+        list.append(el('li', {},
+          el('div', {},
+            el('div', { textContent: alt.name }),
+            el('div', { className: 'meta', textContent: meta(alt) })),
+          el('button', { type: 'button', className: 'small', textContent: 'Use', onclick: () => swap(day, index, alt) })));
+      }
+      li.append(list);
+    } catch (ex) {
+      li.append(el('ul', { className: 'alts' }, el('li', { className: 'msg error', textContent: ex.message })));
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function renderExercise(day, e, index) {
+    const li = el('li', { className: 'exercise' });
+    const swapBtn = el('button', { type: 'button', className: 'small', textContent: 'Swap' });
+    swapBtn.onclick = () => toggleAlternatives(li, day, index, swapBtn);
+    const removeBtn = el('button', {
+      type: 'button',
+      className: 'small',
+      textContent: 'Remove',
+      disabled: day.exercises.length === 1, // every day needs at least one exercise
+      onclick: () => { day.exercises.splice(index, 1); render(); },
+    });
+    li.append(el('div', { className: 'row' },
+      el('div', { className: 'info' },
+        el('div', { className: 'name', textContent: e.name }),
+        el('div', { className: 'meta', textContent: meta(e) })),
+      el('span', { className: 'rx', textContent: prescription(e) }),
+      el('div', { className: 'actions' }, swapBtn, removeBtn)));
+    return li;
   }
 
   function renderDay(day) {
     return el('section', { className: 'card day' },
       el('h2', {}, day.name, el('small', { textContent: `${day.exercises.length} exercises` })),
-      el('ul', { className: 'exercises' }, ...day.exercises.map(renderExercise)));
+      el('ul', { className: 'exercises' }, ...day.exercises.map((e, i) => renderExercise(day, e, i))));
   }
 
   function render() {

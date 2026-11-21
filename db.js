@@ -57,6 +57,11 @@ async function init() {
     );
     CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower ON users (lower(username));
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT true;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS color_palette TEXT NOT NULL DEFAULT 'a';
+    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_color_palette_check;
+    ALTER TABLE users ADD CONSTRAINT users_color_palette_check CHECK (color_palette IN ('a','b','c','d','e','f','g','h','i','j'));
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS color_mode TEXT NOT NULL DEFAULT 'light' CHECK (color_mode IN ('light', 'dark'));
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS text_size TEXT NOT NULL DEFAULT 'default' CHECK (text_size IN ('default', 'large', 'extra-large'));
 
     CREATE TABLE IF NOT EXISTS sessions (
       token TEXT PRIMARY KEY,

@@ -246,7 +246,6 @@ async function getWorkouts(userId, id = null) {
 async function getWorkoutHistory(userId) {
   const { rows } = await pool.query(
     `SELECT w.id,
-            w.name,
             COUNT(DISTINCT we.id)::int AS exercise_count,
             COUNT(ws.id)::int          AS set_count
        FROM workouts w
@@ -257,9 +256,11 @@ async function getWorkoutHistory(userId) {
       ORDER BY w.id DESC`,
     [userId]
   );
+
+  const base = new Map((await getWorkouts(userId)).map((w) => [w.id, w]));
+
   return rows.map((r) => ({
-    id: r.id,
-    name: r.name,
+    ...base.get(String(r.id)),
     exerciseCount: r.exercise_count,
     setCount: r.set_count,
   }));

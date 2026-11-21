@@ -3,6 +3,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { pool } = require('../db');
+const palettes = require('../public/palettes');
 
 const router = express.Router();
 
@@ -20,11 +21,25 @@ async function checkPassword(userId, password) {
 
 router.get('/', async (req, res) => {
   const { rows } = await pool.query(
-    'SELECT username, is_private, created_at FROM users WHERE id = $1',
+    'SELECT username, is_private, created_at, color_palette, color_mode, text_size FROM users WHERE id = $1',
     [req.user.id]
   );
   const u = rows[0];
-  res.json({ username: u.username, isPrivate: u.is_private, createdAt: u.created_at });
+  res.json({ username: u.username, isPrivate: u.is_private, createdAt: u.created_at, appearance: { palette: u.color_palette, mode: u.color_mode, textSize: u.text_size } });
+});
+
+router.patch('/appearance', async (req, res) => {
+  const { palette, mode, textSize } = req.body || {};
+  if ((typeof palette !== 'string' || !Object.hasOwn(palettes, palette)) || !['light', 'dark'].includes(mode)) {
+    return res.status(400).json({ error: 'Choose an available palette and light or dark mode.' });
+  }
+  if (textSize !== undefined && !['default', 'large', 'extra-large'].includes(textSize)) {
+    return res.status(400).json({ error: 'Choose Default, Large, or Extra large text.' });
+  }
+  const { rows: [saved] } = await pool.query(
+    'UPDATE users SET color_palette=$1, color_mode=$2, text_size=COALESCE($3, text_size) WHERE id=$4 RETURNING text_size',
+    [palette, mode, textSize ?? null, req.user.id]);
+  res.json({ appearance: { palette, mode, textSize: saved.text_size } });
 });
 
 router.patch('/username', async (req, res) => {

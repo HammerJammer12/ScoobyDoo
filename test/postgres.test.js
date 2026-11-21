@@ -118,6 +118,35 @@ test('PostgreSQL posts, tags, feed visibility, and likes', { skip: !databaseUrl 
       assert.equal((await request(path)).data.plan.name, 'February');
       await db.pool.query('DELETE FROM workout_plans WHERE id=$1', [saved.data.id]);
     });
+    await t.test('appearance settings persist all twenty theme combinations and stay scoped to the signed-in account', async () => {
+      assert.equal((await request('/api/settings', {user:null})).status, 401);
+      assert.equal((await request('/api/settings/appearance', {user:null,method:'PATCH',body:{palette:'a',mode:'light'}})).status, 401);
+      assert.deepEqual((await request('/api/settings')).data.appearance, {palette:'a',mode:'light',textSize:'default'});
+      for (const palette of Object.keys(require('../public/palettes'))) for (const mode of ['light','dark']) {
+        const response = await request('/api/settings/appearance', {method:'PATCH',body:{palette,mode}});
+        assert.equal(response.status, 200);
+        assert.deepEqual((await request('/api/settings')).data.appearance, {palette,mode,textSize:'default'});
+        assert.deepEqual((await request('/api/settings', {user:1})).data.appearance, {palette:'a',mode:'light',textSize:'default'});
+      }
+      for (const body of [{palette:'unknown',mode:'dark'}, {palette:'a',mode:'auto'}, {palette:'a'}, {palette:['a'],mode:'light'}]) {
+        assert.equal((await request('/api/settings/appearance', {method:'PATCH',body})).status, 400);
+      }
+      assert.deepEqual((await request('/api/settings')).data.appearance, {palette:'j',mode:'dark',textSize:'default'});
+    });
+    await t.test('text size persists, validates values, and is preserved when older clients only save a palette', async () => {
+      for (const textSize of ['default', 'large', 'extra-large']) {
+        const result = await request('/api/settings/appearance', {method:'PATCH',body:{palette:'b',mode:'dark',textSize}});
+        assert.equal(result.status, 200);
+        assert.equal((await request('/api/settings')).data.appearance.textSize, textSize);
+        assert.equal((await request('/api/settings', {user:1})).data.appearance.textSize, 'default');
+      }
+      await request('/api/settings/appearance', {method:'PATCH',body:{palette:'a',mode:'light'}});
+      assert.equal((await request('/api/settings')).data.appearance.textSize, 'extra-large');
+      for (const textSize of ['small', 150, null, ['large']]) {
+        assert.equal((await request('/api/settings/appearance', {method:'PATCH',body:{palette:'a',mode:'light',textSize}})).status, 400);
+      }
+      assert.equal((await request('/api/settings')).data.appearance.textSize, 'extra-large');
+    });
     let taggedPost;
     await t.test('saves tagged and untagged posts in PostgreSQL; rejects foreign tags and invalid content', async () => {
       const response = await request('/api/posts', { method: 'POST', body: { content: "Curl day <script>test</script> '; SELECT 1;", workoutId: String(workoutIds[0]) } });

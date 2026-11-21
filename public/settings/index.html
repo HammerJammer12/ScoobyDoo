@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Settings</title>
+  <script src="/palettes.js"></script>
+  <script src="/appearance.js"></script>
   <style>
     /* Page-only styles until we have a shared stylesheet (#3). */
     body { margin: 0; font-family: system-ui, sans-serif; background: #f8f9fa; color: #1e1e1e; }
@@ -26,11 +28,34 @@
     dialog { border: 1px solid #ffa8a8; border-radius: 8px; max-width: 400px; width: calc(100% - 32px); }
     .actions { display: flex; gap: 8px; }
   </style>
+  <link rel="stylesheet" href="/appearance.css">
 </head>
 <body>
 <main>
   <p><a href="/">&larr; Home</a></p>
   <h1>Settings</h1>
+
+  <section class="card" aria-labelledby="appearance-title">
+    <h2 id="appearance-title">Appearance</h2>
+    <form id="appearance-form">
+      <fieldset id="appearance-options" disabled>
+        <legend>Color palette</legend>
+        <p class="hint">Each palette comes in light and dark. Choose a palette, then a mode.</p>
+        <div id="palette-options" class="palette-options"></div>
+        <label for="appearance-mode">Mode</label>
+        <select id="appearance-mode"><option value="light">Light</option><option value="dark">Dark</option></select>
+        <label for="appearance-text-size">Text size</label>
+        <select id="appearance-text-size">
+          <option value="default">Default (100%)</option>
+          <option value="large">Large (125%)</option>
+          <option value="extra-large">Extra large (150%)</option>
+        </select>
+      </fieldset>
+      <p class="hint">Preview your choice here. Save to apply it across the site and your devices.</p>
+      <button id="appearance-save" class="primary" type="submit" disabled>Save appearance</button>
+      <p class="msg" role="status">Loading appearance…</p>
+    </form>
+  </section>
 
   <section class="card">
     <h2>Account</h2>

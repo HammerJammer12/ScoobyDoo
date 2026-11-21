@@ -149,15 +149,11 @@
     const btn = $('save');
     btn.disabled = true;
     try {
-      await api('POST', '/api/workouts', {
+      const { id}  = await api('POST', '/api/workouts', {
         name: $('w-name').value.trim(),
         exercises: collect(),
       });
-      $('status').textContent = 'Workout saved.';
-      $('status').hidden = false;
-      form.reset();
-      $('exercises').innerHTML = '';
-      addExercise();
+      window.location.href = `/workouts/${id}`;
     } catch (ex) {
       if (ex.status === 401) { window.location.href = '/'; return; }
       showError(ex.message);

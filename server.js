@@ -188,6 +188,19 @@ app.get('/api/exercises', async (req, res) => {
 
 app.use('/api', require('./routes/recommendations')({ requireAuth }));
 
+const workoutPages = path.join(__dirname, 'public', 'workouts');
+
+app.get('/workouts', (_req, res) =>
+  res.sendFile(path.join(workoutPages, 'history', 'workouts.html')));
+
+app.get('/workouts/create', (_req, res) =>
+  res.sendFile(path.join(workoutPages, 'create', 'index.html')));
+
+app.get('/workouts/:id', (req, res, next) => {
+  if (!/^\d+$/.test(req.params.id)) return next();
+  res.sendFile(path.join(workoutPages, 'details', 'workout.html'));
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((err, _req, res, _next) => {

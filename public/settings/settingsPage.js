@@ -40,11 +40,53 @@
 
   function fill(settings) {
     $('username').value = settings.username;
+    const appearance = settings.appearance;
+    document.querySelector(`input[name="palette"][value="${appearance.palette}"]`).checked = true;
+    $('appearance-mode').value = appearance.mode;
+    $('appearance-text-size').value = appearance.textSize;
+    window.appAppearance.apply(appearance, true);
+    $('appearance-options').disabled = false;
+    $('appearance-save').disabled = false;
+    showMsg($('appearance-form'), '');
     const since = new Date(settings.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
     $('member-since').textContent = `Member since ${since}.`;
     const value = settings.isPrivate ? 'private' : 'public';
     document.querySelector(`input[name="privacy"][value="${value}"]`).checked = true;
   }
+
+  for (const [key, palette] of Object.entries(window.appAppearance.palettes)) {
+    const label = document.createElement('label');
+    label.className = 'palette-choice';
+    const radio = document.createElement('input');
+    radio.type = 'radio'; radio.name = 'palette'; radio.value = key; radio.required = true;
+    const name = document.createElement('span'); name.textContent = `${key.toUpperCase()} · ${palette.name}`;
+    const swatches = document.createElement('span'); swatches.className = 'palette-swatches'; swatches.setAttribute('aria-hidden', 'true');
+    for (const color of palette.colors) {
+      const swatch = document.createElement('span');
+      swatch.style.backgroundColor = color;
+      swatches.append(swatch);
+    }
+    label.append(radio, name, swatches);
+    $('palette-options').append(label);
+  }
+  $('appearance-form').addEventListener('change', () => {
+    const palette = document.querySelector('input[name="palette"]:checked')?.value;
+    window.appAppearance.apply({ palette, mode: $('appearance-mode').value, textSize: $('appearance-text-size').value });
+    showMsg($('appearance-form'), 'Preview only. Save to keep this appearance.', true);
+  });
+  onSubmit($('appearance-form'), async () => {
+    const palette = document.querySelector('input[name="palette"]:checked').value;
+    const mode = $('appearance-mode').value;
+    const textSize = $('appearance-text-size').value;
+    $('appearance-options').disabled = true;
+    try {
+      const { appearance } = await api('PATCH', '/api/settings/appearance', { palette, mode, textSize });
+      window.appAppearance.apply(appearance, true);
+      return 'Appearance saved.';
+    } finally {
+      $('appearance-options').disabled = false;
+    }
+  });
 
   onSubmit($('username-form'), async () => {
     const { username } = await api('PATCH', '/api/settings/username', { username: $('username').value.trim() });
@@ -93,5 +135,6 @@
     .then(fill)
     .catch((ex) => {
       if (ex.status === 401) window.location.href = '/';
+      else showMsg($('appearance-form'), `Could not load settings: ${ex.message}. Reload to retry.`, false);
     });
 })();

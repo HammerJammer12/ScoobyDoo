@@ -65,6 +65,9 @@
   }
   for (const id of ['nav-toggle', 'dashboard-menu']) $(id).addEventListener('click', () => setNavigation(!document.body.classList.contains('nav-open')));
   wideNavigation.addEventListener('change', () => setNavigation(wideNavigation.matches));
+  $('view-settings').addEventListener('click', () => {
+    window.location.assign('/settings/');
+  });
   $('view-progress').addEventListener('click', () => dashboardView.showProgress());
   $('view-achievements').addEventListener('click', () => {
     showView('dashboard', false);
@@ -73,6 +76,7 @@
 
   function showUser(user) {
     currentUser = user;
+    window.appAppearance.load();
     sessionVersion += 1;
     feedLoaded = false;
     $('auth-dialog').close();
@@ -89,6 +93,7 @@
 
   function showLanding() {
     currentUser = null;
+    window.appAppearance.reset();
     document.body.classList.remove('signed-in', 'nav-open');
     $('nav-toggle').hidden = true;
     sessionVersion += 1;

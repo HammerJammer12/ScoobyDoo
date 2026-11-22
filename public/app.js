@@ -4,6 +4,21 @@
   let newUser = null;
   let onboardingData = {};
 
+  const ONBOARDING_VIEWS = [
+    'welcome-view',
+    'goals-view',
+    'preferences-view',
+    'background-view',
+  ];
+
+  const APP_VIEWS = [
+    'dashboard',
+    'planner',
+    'community',
+    'profile',
+    'achievements',
+  ];
+
   async function api(method, url, body) {
     const res = await fetch(url, {
       method,
@@ -16,7 +31,6 @@
     return data;
   }
 
-
   const workoutView = window.createWorkoutView(api);
   const feedView = window.createFeedView(api);
   const dailyLiftView = window.createWorkoutView(api, { daily: true });
@@ -27,10 +41,25 @@
   let sessionVersion = 0;
   let feedLoaded = false;
 
+  function hideOnboardingViews() {
+    for (const id of ONBOARDING_VIEWS) {
+      const el = $(id);
+      if (el) el.hidden = true;
+    }
+  }
+
+  function hideAppViews() {
+    for (const name of APP_VIEWS) {
+      const el = $(`${name}-view`);
+      if (el) el.hidden = true;
+    }
+  }
+
   function showView(view, focus = true) {
     if (!currentUser) return;
+    hideOnboardingViews();
     document.body.dataset.currentView = view;
-    for (const name of ['dashboard', 'planner', 'community', 'profile', 'achievements']) {
+    for (const name of APP_VIEWS) {
       $(`${name}-view`).hidden = name !== view;
     }
     document.querySelectorAll('[data-view]').forEach((button) => {
@@ -84,9 +113,15 @@
 
   function showUser(user) {
     currentUser = user;
+    newUser = null;
     sessionVersion += 1;
     feedLoaded = false;
-    $('auth-dialog').close();
+
+    if ($('auth-dialog')?.open) {
+      $('auth-dialog').close();
+    }
+    hideOnboardingViews();
+
     document.body.classList.add('signed-in');
     $('nav-toggle').hidden = false;
     setNavigation(wideNavigation.matches);
@@ -100,6 +135,7 @@
 
   function showLanding() {
     currentUser = null;
+    newUser = null;
     document.body.classList.remove('signed-in', 'nav-open');
     $('nav-toggle').hidden = true;
     sessionVersion += 1;
@@ -110,45 +146,31 @@
     dailyLiftView.clear();
     workoutView.clear();
     feedView.clear();
-    for (const name of ['dashboard', 'planner', 'community', 'profile', 'achievements']) $(`${name}-view`).hidden = true;
+    hideOnboardingViews();
+    hideAppViews();
     $('create-post-floating').hidden = true;
     $('nav').hidden = true;
     $('landing-view').hidden = false;
   }
-  
-  function hideAllViews() {
-    [
-      'auth-view',
-      'welcome-view',
-      'goals-view',
-      'preferences-view',
-      'background-view',
-      'home-view',
-      'feed-view',
-      'progress-view',
-      'plan-view',
-      'profile-view',
-      'settings-view'
-    ].forEach(id => {
-      const element = $(id);
-      if (element) element.hidden = true;
-    });
-  }
-
-
 
   // Onboarding flow functions
   function startOnboarding(user) {
     newUser = user;
     onboardingData = {};
 
-    hideAllViews();
-
+    if ($('auth-dialog')?.open) {
+      $('auth-dialog').close();
+    }
+    $('landing-view').hidden = true;
     $('nav').hidden = true;
+    $('create-post-floating').hidden = true;
+
+    hideAppViews();
+    hideOnboardingViews();
     $('welcome-view').hidden = false;
   }
 
-  // Show goals view  
+  // Show goals view
   function showGoals() {
     $('welcome-view').hidden = true;
     $('goals-view').hidden = false;
@@ -159,22 +181,21 @@
   if (welcomeNext) {
     welcomeNext.addEventListener('click', showGoals);
   }
+
   $('goals-back').addEventListener('click', () => {
     $('goals-view').hidden = true;
     $('welcome-view').hidden = false;
   });
 
   // Expand and collapse goal questions
-  document.querySelectorAll('[data-goal]').forEach(checkbox => {
+  document.querySelectorAll('[data-goal]').forEach((checkbox) => {
     checkbox.addEventListener('change', () => {
-      const details = $(
-        `${checkbox.dataset.goal}-details`
-      );
+      const details = $(`${checkbox.dataset.goal}-details`);
 
       details.hidden = !checkbox.checked;
 
       if (!checkbox.checked) {
-        details.querySelectorAll('input').forEach(input => {
+        details.querySelectorAll('input').forEach((input) => {
           input.checked = false;
         });
       }
@@ -183,17 +204,14 @@
 
   function getValues(name) {
     return [
-      ...document.querySelectorAll(
-        `input[name="${name}"]:checked`
-      )
-    ].map(input => input.value);
+      ...document.querySelectorAll(`input[name="${name}"]:checked`),
+    ].map((input) => input.value);
   }
+
   // Collect goals from the form
   function collectGoals() {
     const selectedGoals = [
-      ...document.querySelectorAll(
-        'input[name="goal"]:checked'
-      )
+      ...document.querySelectorAll('input[name="goal"]:checked'),
     ];
 
     if (!selectedGoals.length) {
@@ -207,29 +225,20 @@
       const section = $(`${type}-details`);
 
       if (type === 'weight') {
-        const focus = section.querySelector(
-          'input[name="weightFocus"]:checked'
-        );
+        const focus = section.querySelector('input[name="weightFocus"]:checked');
 
         if (!focus) {
-          throw new Error(
-            'Please select your weight management focus.'
-          );
+          throw new Error('Please select your weight management focus.');
         }
 
         details.weight = { focus: focus.value };
-
       } else {
         const selected = [
-          ...section.querySelectorAll(
-            'input[type="checkbox"]:checked'
-          )
-        ].map(input => input.value);
+          ...section.querySelectorAll('input[type="checkbox"]:checked'),
+        ].map((input) => input.value);
 
         if (!selected.length) {
-          throw new Error(
-            `Please answer the questions for ${goal.value}.`
-          );
+          throw new Error(`Please answer the questions for ${goal.value}.`);
         }
 
         details[type] = selected;
@@ -237,116 +246,102 @@
     }
 
     return {
-      goals: selectedGoals.map(goal => goal.value),
-      goalDetails: details
+      goals: selectedGoals.map((goal) => goal.value),
+      goalDetails: details,
     };
   }
-  
-$('goals-next').addEventListener('click', () => {
-  const error = $('goals-error');
-  error.hidden = true;
 
-  try {
-    onboardingData = collectGoals();
+  $('goals-next').addEventListener('click', () => {
+    const error = $('goals-error');
+    error.hidden = true;
 
-    console.log('Collected onboarding data:', onboardingData);
+    try {
+      onboardingData = collectGoals();
 
-    $('goals-view').hidden = true;
+      console.log('Collected onboarding data:', onboardingData);
+
+      $('goals-view').hidden = true;
+      $('preferences-view').hidden = false;
+    } catch (ex) {
+      error.textContent = ex.message;
+      error.hidden = false;
+    }
+  });
+
+  // Preferences: Back button
+  $('preferences-back').addEventListener('click', () => {
+    $('preferences-view').hidden = true;
+    $('goals-view').hidden = false;
+  });
+
+  // Preferences: Continue button
+  $('preferences-next').addEventListener('click', () => {
+    const error = $('preferences-error');
+    error.hidden = true;
+
+    const fitnessLevel = $('fitness-level').value;
+    const workoutTypes = getValues('workoutType');
+    const workoutLocation = $('workout-location').value;
+
+    if (!fitnessLevel || !workoutTypes.length || !workoutLocation) {
+      error.textContent = 'Please complete all preferences.';
+      error.hidden = false;
+      return;
+    }
+
+    onboardingData.preferences = {
+      fitnessLevel,
+      workoutTypes,
+      workoutLocation,
+    };
+
+    console.log('Complete onboarding data:', onboardingData);
+
+    $('preferences-view').hidden = true;
+    $('background-view').hidden = false;
+  });
+
+  $('background-back').addEventListener('click', () => {
+    $('background-view').hidden = true;
     $('preferences-view').hidden = false;
+  });
 
-  } catch (ex) {
-    error.textContent = ex.message;
-    error.hidden = false;
-  }
-});
+  $('background-next').addEventListener('click', async () => {
+    const error = $('background-error');
+    error.hidden = true;
 
-// Preferences: Back button
-$('preferences-back').addEventListener('click', () => {
-  $('preferences-view').hidden = true;
-  $('goals-view').hidden = false;
-});
+    const experience = document.querySelector('input[name="fitnessExperience"]:checked');
+    const activity = document.querySelector('input[name="activityLevel"]:checked');
+    const equipment = getValues('equipment');
 
-// Preferences: Continue button
-$('preferences-next').addEventListener('click', () => {
-  const error = $('preferences-error');
-  error.hidden = true;
+    if (!experience || !activity) {
+      error.textContent = 'Please answer your fitness experience and activity level.';
+      error.hidden = false;
+      return;
+    }
 
-  const fitnessLevel = $('fitness-level').value;
-  const workoutTypes = getValues('workoutType');
-  const workoutLocation = $('workout-location').value;
+    if (!equipment.length) {
+      error.textContent = 'Please select at least one equipment option.';
+      error.hidden = false;
+      return;
+    }
 
-  if (!fitnessLevel || !workoutTypes.length || !workoutLocation) {
-    error.textContent = 'Please complete all preferences.';
-    error.hidden = false;
-    return;
-  }
+    onboardingData.background = {
+      experience: experience.value,
+      activity: activity.value,
+      equipment,
+    };
 
-  onboardingData.preferences = {
-    fitnessLevel,
-    workoutTypes,
-    workoutLocation
-  };
+    console.log('Complete onboarding data:', onboardingData);
 
-  console.log('Complete onboarding data:', onboardingData);
-
-  $('preferences-view').hidden = true;
-  $('background-view').hidden = false;
-});
-
-$('background-back').addEventListener('click', () => {
-  $('background-view').hidden = true;
-  $('preferences-view').hidden = false;
-});
-
-$('background-next').addEventListener('click', async () => {
-  const error = $('background-error');
-  error.hidden = true;
-
-  const experience = document.querySelector(
-    'input[name="fitnessExperience"]:checked'
-  );
-
-  const activity = document.querySelector(
-    'input[name="activityLevel"]:checked'
-  );
-
-  const equipment = getValues('equipment');
-
-  if (!experience || !activity) {
-    error.textContent =
-      'Please answer your fitness experience and activity level.';
-    error.hidden = false;
-    return;
-  }
-
-  if (!equipment.length) {
-    error.textContent =
-      'Please select at least one equipment option.';
-    error.hidden = false;
-    return;
-  }
-
-  // Save the final onboarding answers
-  onboardingData.background = {
-    experience: experience.value,
-    activity: activity.value,
-    equipment: equipment
-  };
-
-  console.log('Complete onboarding data:', onboardingData);
-
-  try {
-    await api('POST', '/api/onboarding', onboardingData);
-
-    const user = newUser;
-    newUser = null;
-    showUser(user);
-  } catch (ex) {
-    error.textContent = ex.message || 'Could not save onboarding.';
-    error.hidden = false;
-  }
-});
-
+    try {
+      await api('POST', '/api/onboarding', onboardingData);
+      showUser(newUser);
+    } catch (ex) {
+      error.textContent = ex.message || 'Could not save onboarding.';
+      error.hidden = false;
+    }
+  });
 
   function showPage(page) {
     document.querySelectorAll('.page').forEach((section) => {
@@ -358,16 +353,11 @@ $('background-next').addEventListener('click', async () => {
     if (!selectedPage) return;
     selectedPage.hidden = false;
 
-    // Update navigation link
     document.querySelectorAll('.nav-link').forEach((link) => {
-      link.classList.toggle(
-        'active',
-        link.dataset.page === page
-      );
+      link.classList.toggle('active', link.dataset.page === page);
     });
   }
 
-  // Handle navigation clicks
   document.querySelectorAll('.nav-link').forEach((link) => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
@@ -378,7 +368,6 @@ $('background-next').addEventListener('click', async () => {
       window.location.hash = page;
     });
   });
-
 
   function setMode(next) {
     mode = next;
@@ -434,7 +423,7 @@ $('background-next').addEventListener('click', async () => {
       }
       const { user } = await api('POST', mode === 'signup' ? '/api/signup' : '/api/login', payload);
       $('auth-form').reset();
-      if (mode == 'signup') {
+      if (mode === 'signup') {
         startOnboarding(user);
       } else {
         showUser(user);

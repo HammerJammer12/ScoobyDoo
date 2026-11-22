@@ -1,516 +1,458 @@
-
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Title -- we probably want to change the title-->
-  <title>Fitness Tracker | Log In</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <title>Workout app</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/achievements.css">
 </head>
-
 <body>
-  <!-- Navigation Bar -->
   <header class="topbar">
-    <div class="nav-brand">
-      <a href="#home" class="brand">Fitness Tracker</a>
-    </div>
-
-    <nav id="nav" class="main-nav" hidden>
-      <a href="#home" class="nav-link active" data-page="home">
-        Dashboard
-      </a>
-
-      <a href="#feed" class="nav-link" data-page="feed">
-        Feed
-      </a>
-
-      <a href="#progress" class="nav-link" data-page="progress">
-        Progress
-      </a>
-
-      <a href="#plan" class="nav-link" data-page="plan">
-        Plan
-      </a>
-
-      <a href="#profile" class="nav-link" data-page="profile">
-        Profile
-      </a>
-
-      <a href="#settings" class="nav-link" data-page="settings">
-        Settings
-      </a>
-
-      <div class="nav-user">
-        <span id="nav-user"></span>
-
-        <button id="logout-btn" class="link-btn" type="button">
-          Log out
-        </button>
+    <a class="brand" href="/" aria-label="Workout app home"><span class="logo-mark">Logo</span><span class="brand-name">Workout app</span></a>
+    <button id="nav-toggle" class="menu-toggle" type="button" aria-label="Toggle navigation" aria-controls="nav-links" aria-expanded="true" hidden>☰</button>
+    <nav id="nav" aria-label="Main navigation" hidden>
+      <div id="nav-links">
+        <button id="view-dashboard" type="button" data-view="dashboard">Dashboard</button>
+        <button type="button" data-view="planner">Planner</button>
+        <button type="button" disabled title="Workout tracking coming soon">Track workout</button>
+        <button id="view-community" type="button" data-view="community">Community</button>
+        <button id="view-progress" type="button">Progress</button>
+        <button id="view-achievements" type="button" data-view="achievements">Achievements</button>
+        <button id="view-profile" type="button" data-view="profile">Profile</button>
+        <button type="button" disabled title="Settings coming soon">Settings</button>
       </div>
+      <span id="nav-user"></span>
+      <a href="/settings/">Settings</a>
+      <button id="logout-btn" class="link-btn" type="button">Log out</button>
     </nav>
   </header>
 
   <main>
-    <!-- Log In view -->
-    <section id="auth-view" hidden>
-      <div class="card">
+    <!-- Public home page -->
+    <section id="landing-view">
+      <h1>Your workouts, in one place.</h1>
+      <p>Track your training and progress, then catch up with the community.</p>
+      <button id="open-auth" type="button">Sign in / Sign up</button>
+    </section>
 
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-mode="login" role="tab" type="button">
-            Log in
-          </button>
-
-          <button class="tab" data-mode="signup" role="tab" type="button">
-            Sign up
-          </button>
+    <!-- The browser handles the popup and keyboard focus. -->
+    <dialog id="auth-dialog" aria-labelledby="auth-title">
+      <div class="section-heading">
+        <h2 id="auth-title">Sign in or create an account</h2>
+        <button id="close-auth" type="button">Close</button>
+      </div>
+      <div>
+        <div class="tabs" role="group" aria-label="Sign-in options">
+          <button class="tab active" data-mode="login" aria-pressed="true" type="button">Log in</button>
+          <button class="tab" data-mode="signup" aria-pressed="false" type="button">Sign up</button>
         </div>
-
-        <form id="auth-form" novalidate>
-
-          <label>
-            Username
-            <input
-              id="username"
-              name="username"
-              autocomplete="username"
-              required
-            >
+        <form id="auth-form">
+          <label>Username
+            <input id="username" name="username" autocomplete="username" required>
           </label>
-
-          <label>
-            Password
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autocomplete="current-password"
-              required
-            >
+          <label>Password
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
           </label>
-
+          <div id="signup-fields" hidden>
+            <p>Username: 3–30 letters, numbers, or underscores. Password: at least 8 characters, up to 72 bytes (some characters use more than one byte).</p>
+            <label>Confirm password
+              <input id="confirm-password" type="password" autocomplete="new-password">
+            </label>
+          </div>
           <p id="auth-error" class="error" role="alert" hidden></p>
-
-          <button id="auth-submit" class="primary" type="submit">
-            Log in
-          </button>
-
+          <button id="auth-submit" class="primary" type="submit">Log in</button>
         </form>
       </div>
-    </section>
+    </dialog>
 
-    <!-- Onboarding -->
-    <section id="welcome-view" hidden>
-      <div class="card onboarding-card">
-        <p class="eyebrow">WELCOME TO FITNESS TRACKER</p>
-        <h1>Let's get started!</h1>
-        <p>
-          Your fitness journey is unique.
-          Let's personalize your experience so you can
-          reach your goals, track your progress, and
-          connect with friends.
-        </p>
-        <button id="welcome-next" class="primary">
-          Get started
-        </button>
+
+<!-- Onboarding screens -->
+
+<section id="welcome-view" hidden>
+  <h1>Welcome to your fitness journey!</h1>
+  <p>Let's personalise your workout experience.</p>
+  <button id="welcome-next" type="button">Get started</button>
+</section>
+
+<section id="goals-view" hidden>
+  <h1>What are your fitness goals?</h1>
+
+  <label>
+    <input type="checkbox" name="goal" value="weight" data-goal="weight">
+    Weight management
+  </label>
+
+  <div id="weight-details" hidden>
+    <label>
+      <input type="radio" name="weightFocus" value="lose">
+      Lose weight
+    </label>
+    <label>
+      <input type="radio" name="weightFocus" value="gain">
+      Gain weight
+    </label>
+    <label>
+      <input type="radio" name="weightFocus" value="maintain">
+      Maintain weight
+    </label>
+  </div>
+
+  <label>
+    <input type="checkbox" name="goal" value="strength" data-goal="strength">
+    Build strength
+  </label>
+  <div id="strength-details" hidden>
+    <label><input type="checkbox" value="general"> General strength</label>
+    <label><input type="checkbox" value="powerlifting"> Powerlifting</label>
+  </div>
+
+  <label>
+    <input type="checkbox" name="goal" value="muscle" data-goal="muscle">
+    Build muscle
+  </label>
+  <div id="muscle-details" hidden>
+    <label><input type="checkbox" value="upper-body"> Upper body</label>
+    <label><input type="checkbox" value="lower-body"> Lower body</label>
+    <label><input type="checkbox" value="full-body"> Full body</label>
+  </div>
+
+  <p id="goals-error" class="error" hidden></p>
+  <button id="goals-back" type="button">Back</button>
+  <button id="goals-next" type="button">Continue</button>
+</section>
+
+<section id="preferences-view" hidden>
+  <h1>Your workout preferences</h1>
+
+  <label>Fitness level
+    <select id="fitness-level">
+      <option value="">Choose one</option>
+      <option value="beginner">Beginner</option>
+      <option value="intermediate">Intermediate</option>
+      <option value="advanced">Advanced</option>
+    </select>
+  </label>
+
+  <p>What types of workouts do you enjoy?</p>
+  <label><input type="checkbox" name="workoutType" value="strength"> Strength</label>
+  <label><input type="checkbox" name="workoutType" value="cardio"> Cardio</label>
+  <label><input type="checkbox" name="workoutType" value="flexibility"> Flexibility</label>
+
+  <label>Where do you work out?
+    <select id="workout-location">
+      <option value="">Choose one</option>
+      <option value="gym">Gym</option>
+      <option value="home">Home</option>
+      <option value="outdoors">Outdoors</option>
+    </select>
+  </label>
+
+  <p id="preferences-error" class="error" hidden></p>
+  <button id="preferences-back" type="button">Back</button>
+  <button id="preferences-next" type="button">Continue</button>
+</section>
+
+<section id="background-view" hidden>
+  <h1>Tell us about your experience</h1>
+
+  <p>How experienced are you with fitness?</p>
+  <label><input type="radio" name="fitnessExperience" value="new"> New to fitness</label>
+  <label><input type="radio" name="fitnessExperience" value="some"> Some experience</label>
+  <label><input type="radio" name="fitnessExperience" value="experienced"> Experienced</label>
+
+  <p>How active are you currently?</p>
+  <label><input type="radio" name="activityLevel" value="low"> Not very active</label>
+  <label><input type="radio" name="activityLevel" value="moderate"> Moderately active</label>
+  <label><input type="radio" name="activityLevel" value="high"> Very active</label>
+
+  <p>What equipment do you have access to?</p>
+  <label><input type="checkbox" name="equipment" value="full-gym"> Full gym</label>
+  <label><input type="checkbox" name="equipment" value="dumbbells"> Dumbbells</label>
+  <label><input type="checkbox" name="equipment" value="bodyweight"> Bodyweight only</label>
+  <label><input type="checkbox" name="equipment" value="resistance-bands"> Resistance bands</label>
+
+  <p id="background-error" class="error" hidden></p>
+  <button id="background-back" type="button">Back</button>
+  <button id="background-next" type="button">Finish</button>
+</section>
+
+
+    <!-- Logged-in view -->
+    <section id="dashboard-view" hidden aria-labelledby="dashboard-title">
+      <div class="dashboard-heading">
+        <div class="dashboard-logo-menu">
+          <span class="logo-mark" aria-hidden="true">Logo</span>
+          <button id="dashboard-menu" class="menu-toggle" type="button" aria-label="Toggle navigation" aria-controls="nav-links" aria-expanded="true">☰</button>
+        </div>
+        <div>
+          <h1 id="dashboard-title" class="sr-only" tabindex="-1">Dashboard</h1>
+          <time id="dashboard-date"></time>
+          <p id="welcome" class="sr-only"></p>
+        </div>
+      </div>
+      <div class="notification-strip" role="status"><strong>Notifications:</strong><span id="dashboard-notifications">No notifications to show.</span></div>
+      <p id="dashboard-status" class="muted" role="status"></p>
+      <button id="dashboard-retry" type="button" hidden>Retry dashboard</button>
+      <div class="dashboard-grid">
+        <section class="dashboard-card today-card" aria-labelledby="today-title">
+          <h2 id="today-title">Today’s workout</h2>
+          <p class="today-note">A suggestion from your saved workouts. No scheduled plan connected.</p>
+          <div id="dashboard-suggestion"></div>
+          <button class="start-workout" type="button" disabled title="Workout tracking is coming soon">Start workout <span aria-hidden="true">⟶</span></button>
+        </section>
+        <section class="dashboard-card goals-card" aria-labelledby="goals-title">
+          <h2 id="goals-title">Goals</h2>
+          <div class="goal-rings" aria-label="No goals have been set">
+            <div class="goal-ring"><span>—</span><small>No goal yet</small></div>
+            <div class="goal-ring"><span>—</span><small>No goal yet</small></div>
+            <div class="goal-ring"><span>—</span><small>No goal yet</small></div>
+          </div>
+        </section>
+        <section class="dashboard-card recent-card" aria-labelledby="recent-title">
+          <h2 id="recent-title">Your recent activities</h2>
+          <p class="activity-note muted">Latest three saved workouts · Dates not recorded yet</p>
+          <p id="dashboard-recent-empty" class="muted" hidden>No saved workouts yet.</p>
+          <ol id="dashboard-recent" class="recent-workouts"></ol>
+          <button id="dashboard-view-all" class="view-all" type="button">View all <span aria-hidden="true">⟶</span></button>
+        </section>
+        <section id="dashboard-achievements-card" class="dashboard-card achievements-card" aria-labelledby="dashboard-achievements-title" tabindex="-1">
+          <h2 id="dashboard-achievements-title">Recent achievements</h2>
+          <p id="dashboard-achievements-empty" class="muted">No personal records yet.</p>
+          <ul id="dashboard-achievements" class="achievement-list"></ul>
+          <button id="dashboard-view-achievements" class="view-all" type="button">Goals &amp; all records <span aria-hidden="true">⟶</span></button>
+        </section>
+        <button id="dashboard-check-progress" class="check-progress" type="button">Check your progress <span aria-hidden="true">⟶</span></button>
       </div>
     </section>
 
-    <!-- Onboarding: Fitness goals -->
-    <section id="goals-view" hidden>
-      <div class="card onboarding-card">
+    <section id="planner-view" hidden aria-labelledby="planner-title">
+      <div class="planner-heading"><span class="logo-mark" aria-hidden="true">Logo</span><h1 id="planner-title" tabindex="-1">Workout plan</h1></div>
+      <div class="planner-toolbar">
+        <button id="planner-add" type="button">+ To plan</button>
+        <button id="planner-load" type="button">Load plan</button>
+        <button id="planner-new" type="button">New plan</button>
+        <button id="planner-save" type="button">Save plan</button>
+      </div>
+      <div class="planner-fields">
+        <label>Plan name<input id="planner-name" maxlength="80" placeholder="Name your plan"></label>
+        <label>View<select id="planner-type"><option value="weekly">7-day week</option><option value="monthly">Full month</option></select></label>
+        <label>Starting date<input id="planner-date" type="date" min="1900-01-01" max="2200-12-31"></label>
+      </div>
+      <div class="section-heading planner-period"><h2 id="planner-period"></h2><span id="planner-dirty" class="muted"></span></div>
+      <p id="planner-status" role="status"></p>
+      <div class="planner-legend" aria-label="Workout colors"><span class="plan-arms">● Arms</span><span class="plan-legs">● Legs</span><span class="plan-back">● Back</span><span class="plan-chest">● Chest</span><span class="plan-other">● Other</span></div>
+      <div id="planner-calendar"></div>
+    </section>
 
-        <div class="onboarding-progress">
-          <span>STEP 1 OF 3</span>
-          <div class="progress-track">
-            <div class="progress-fill" style="width: 33%"></div>
-          </div>
+    <dialog id="planner-discard-dialog" aria-labelledby="planner-discard-title">
+      <h2 id="planner-discard-title">Discard unsaved planner changes?</h2>
+      <p>Your saved plans will still be available.</p>
+      <button id="planner-keep" type="button">Keep editing</button>
+      <button id="planner-discard" type="button">Discard changes</button>
+    </dialog>
+    <dialog id="planner-add-dialog" aria-labelledby="planner-add-title">
+      <form id="planner-add-form">
+        <div class="section-heading"><h2 id="planner-add-title">Add to plan</h2><button id="planner-add-close" type="button">Cancel</button></div>
+        <label>Day<select id="planner-day" required></select></label>
+        <label>Workout<select id="planner-workout" required></select></label>
+        <p id="planner-add-error" class="error" role="alert"></p>
+        <button id="planner-add-submit" type="submit">Add workout</button>
+      </form>
+    </dialog>
+    <dialog id="planner-load-dialog" aria-labelledby="planner-load-title">
+      <div class="section-heading"><h2 id="planner-load-title">Saved plans</h2><button id="planner-load-close" type="button">Close</button></div>
+      <p id="planner-load-status" role="status"></p><ul id="planner-saved-list" class="history-list"></ul>
+    </dialog>
+
+    <section id="achievements-view" hidden aria-labelledby="achievements-title">
+      <div class="home-heading">
+        <h1 id="achievements-title" tabindex="-1">Goals &amp; achievements</h1>
+        <p class="muted">Set targets, track your progress and see every personal record.</p>
+      </div>
+      <p id="achievements-status" class="muted" role="status"></p>
+      <button id="achievements-retry" type="button" hidden>Retry</button>
+
+      <dl class="progress-summary" aria-label="Your totals">
+        <div><dt>Saved workouts</dt><dd id="achievements-workouts">—</dd></div>
+        <div><dt>Sets logged</dt><dd id="achievements-sets">—</dd></div>
+        <div><dt>Personal records</dt><dd id="achievements-prs">—</dd></div>
+      </dl>
+
+      <section class="feed-column" aria-labelledby="goals-page-title">
+        <div class="feed-heading">
+          <h2 id="goals-page-title">Your goals</h2>
+          <button id="goal-add" class="primary" type="button">New goal</button>
+        </div>
+        <p id="goals-page-status" class="muted" role="status"></p>
+        <p id="goals-empty" class="muted" hidden>No goals yet. Set a PR target, a time or distance, or a workout count to start tracking.</p>
+        <ul id="goals-list" class="goal-list"></ul>
+      </section>
+
+      <section class="feed-column" aria-labelledby="records-title">
+        <div class="feed-heading">
+          <h2 id="records-title">Personal records</h2>
+        </div>
+        <div class="records-controls">
+          <label>Search exercises <input id="records-search" type="search" placeholder="e.g. bench"></label>
+        </div>
+        <p id="records-empty" class="muted" hidden>No personal records yet.</p>
+        <p id="records-none" class="muted" hidden>No exercises match that search.</p>
+        <ul id="records-board" class="record-board"></ul>
+      </section>
+    </section>
+
+    <dialog id="goal-dialog" aria-labelledby="goal-dialog-title">
+      <form id="goal-form">
+        <div class="section-heading"><h2 id="goal-dialog-title">New goal</h2><button id="goal-cancel" type="button">Cancel</button></div>
+        <label>Goal type
+          <select id="goal-kind">
+            <option value="exercise">Exercise goal (PR, time, distance…)</option>
+            <option value="workouts">Save more workouts</option>
+            <option value="sets">Log more sets</option>
+            <option value="prs">Set more personal records</option>
+          </select>
+        </label>
+
+        <div id="goal-exercise-fields">
+          <label>Exercise <input id="goal-exercise" list="goal-exercise-list" autocomplete="off" placeholder="e.g. Bench Press or 5K Run"></label>
+          <datalist id="goal-exercise-list"></datalist>
+          <p id="goal-exercise-hint" class="muted" role="status"></p>
+          <label>What are you improving? <select id="goal-metric"></select></label>
+          <label id="goal-qual-wrap" hidden><span id="goal-qual-label">Extra condition</span> <input id="goal-qual" inputmode="decimal"></label>
+          <label id="goal-unit-wrap" hidden>Distance unit
+            <select id="goal-unit">
+              <option value="km">Kilometres</option>
+              <option value="mi">Miles</option>
+              <option value="m">Metres</option>
+            </select>
+          </label>
+          <label><span id="goal-target-label">Target</span> <input id="goal-target" inputmode="decimal" autocomplete="off"></label>
+          <p id="goal-preview" class="muted" role="status"></p>
         </div>
 
-        <h1>What are your fitness goals?</h1>
-        <p>Select all that apply. We'll personalize
-          your experience based on your goals.</p>
+        <div id="goal-count-fields" hidden>
+          <label><span id="goal-count-label">How many more?</span> <input id="goal-count" type="number" min="1" step="1" inputmode="numeric"></label>
+        </div>
 
-        <!-- BUILD MUSCLE -->
-        <div class="goal-card">
-          <label>
-            <input type="checkbox" name="goal"
-              value="Build muscle" data-goal="muscle">
-            Build muscle
-          </label>
+        <label>Deadline <span class="muted">(optional)</span> <input id="goal-deadline" type="date" min="1900-01-01" max="2200-12-31"></label>
+        <p id="goal-error" class="error" role="alert" hidden></p>
+        <button class="primary" type="submit">Add goal</button>
+      </form>
+    </dialog>
 
-          <div class="goal-details" id="muscle-details" hidden>
-            <p>Which muscle groups do you want to focus on?</p>
+    <dialog id="goal-log-dialog" aria-labelledby="goal-log-title">
+      <form id="goal-log-form">
+        <div class="section-heading"><h2 id="goal-log-title">Log a result</h2><button id="goal-log-cancel" type="button">Cancel</button></div>
+        <p id="goal-log-context" class="muted"></p>
+        <label><span id="goal-log-label">Result</span> <input id="goal-log-value" inputmode="decimal" autocomplete="off" required></label>
+        <p id="goal-log-error" class="error" role="alert" hidden></p>
+        <button class="primary" type="submit">Save result</button>
+      </form>
+    </dialog>
 
-            <div class="goal-options">
-              <label><input type="checkbox" name="muscleGroup" value="Chest"> Chest</label>
-              <label><input type="checkbox" name="muscleGroup" value="Back"> Back</label>
-              <label><input type="checkbox" name="muscleGroup" value="Shoulders"> Shoulders</label>
-              <label><input type="checkbox" name="muscleGroup" value="Arms"> Arms</label>
-              <label><input type="checkbox" name="muscleGroup" value="Legs"> Legs</label>
-              <label><input type="checkbox" name="muscleGroup" value="Glutes"> Glutes</label>
-              <label><input type="checkbox" name="muscleGroup" value="Core"> Core</label>
-              <label><input type="checkbox" name="muscleGroup" value="Full body"> Full body</label>
+    <section id="community-view" hidden aria-labelledby="community-title">
+      <div class="home-heading">
+        <h1 id="community-title" tabindex="-1">Community</h1>
+        <p class="muted">Workout updates from you and everyone else.</p>
+      </div>
+      <div class="social-layout">
+        <section class="feed-column" aria-labelledby="feed-title">
+          <div class="feed-compose">
+            <div class="avatar" aria-hidden="true">You</div>
+            <div class="compose-prompt">
+              <p>What did you train today?</p>
+              <span class="muted">Share a workout or a small win.</span>
             </div>
+            <button id="create-post-top" class="primary" type="button">Create post</button>
           </div>
-        </div>
-
-        <!-- LOSE WEIGHT -->
-        <div class="goal-card">
-          <label>
-            <input type="checkbox" name="goal"
-              value="Lose weight" data-goal="weight">
-            Lose weight
-          </label>
-
-          <div class="goal-details" id="weight-details" hidden>
-            <p>What is your primary focus?</p>
-
-            <label><input type="radio" name="weightFocus" value="Fat loss"> Fat loss</label>
-            <label><input type="radio" name="weightFocus" value="Body composition"> Improve body composition</label>
-            <label><input type="radio" name="weightFocus" value="Weight management"> General weight management</label>
+          <div class="feed-heading">
+            <h2 id="feed-title">Your feed</h2>
+            <span class="sample-label">Community &amp; workouts</span>
           </div>
-        </div>
-
-        <!-- IMPROVE STRENGTH -->
-        <div class="goal-card">
-          <label>
-            <input type="checkbox" name="goal"
-              value="Improve strength" data-goal="strength">
-            Improve strength
-          </label>
-
-          <div class="goal-details" id="strength-details" hidden>
-            <p>Which exercises do you want to improve?</p>
-
-            <div class="goal-options">
-              <label><input type="checkbox" name="strengthExercise" value="Bench press"> Bench press</label>
-              <label><input type="checkbox" name="strengthExercise" value="Squat"> Squat</label>
-              <label><input type="checkbox" name="strengthExercise" value="Deadlift"> Deadlift</label>
-              <label><input type="checkbox" name="strengthExercise" value="Overhead press"> Overhead press</label>
-              <label><input type="checkbox" name="strengthExercise" value="Pull-ups"> Pull-ups</label>
-              <label><input type="checkbox" name="strengthExercise" value="Other"> Other</label>
-            </div>
-          </div>
-        </div>
-
-        <!-- IMPROVE ENDURANCE -->
-        <div class="goal-card">
-          <label>
-            <input type="checkbox" name="goal"
-              value="Improve endurance" data-goal="endurance">
-            Improve endurance
-          </label>
-
-          <div class="goal-details" id="endurance-details" hidden>
-            <p>What type of endurance interests you?</p>
-
-            <div class="goal-options">
-              <label><input type="checkbox" name="enduranceType" value="Running"> Running</label>
-              <label><input type="checkbox" name="enduranceType" value="Cycling"> Cycling</label>
-              <label><input type="checkbox" name="enduranceType" value="Swimming"> Swimming</label>
-              <label><input type="checkbox" name="enduranceType" value="Cardio"> General cardio</label>
-              <label><input type="checkbox" name="enduranceType" value="Sports"> Sports performance</label>
-            </div>
-          </div>
-        </div>
-
-        <!-- OVERALL HEALTH -->
-        <div class="goal-card">
-          <label>
-            <input type="checkbox" name="goal"
-              value="Overall health" data-goal="health">
-            Improve overall health
-          </label>
-
-          <div class="goal-details" id="health-details" hidden>
-            <p>What would you like to focus on?</p>
-
-            <div class="goal-options">
-              <label><input type="checkbox" name="healthFocus" value="Energy"> Increase energy</label>
-              <label><input type="checkbox" name="healthFocus" value="Cardiovascular fitness"> Cardiovascular fitness</label>
-              <label><input type="checkbox" name="healthFocus" value="Sleep"> Improve sleep</label>
-              <label><input type="checkbox" name="healthFocus" value="Consistency"> Build consistency</label>
-              <label><input type="checkbox" name="healthFocus" value="Wellness"> General wellness</label>
-            </div>
-          </div>
-        </div>
-
-        <!-- FLEXIBILITY -->
-        <div class="goal-card">
-          <label>
-            <input type="checkbox" name="goal"
-              value="Increase flexibility" data-goal="flexibility">
-            Increase flexibility
-          </label>
-
-          <div class="goal-details" id="flexibility-details" hidden>
-            <p>Which areas would you like to improve?</p>
-
-            <div class="goal-options">
-              <label><input type="checkbox" name="flexibilityArea" value="Hips"> Hips</label>
-              <label><input type="checkbox" name="flexibilityArea" value="Hamstrings"> Hamstrings</label>
-              <label><input type="checkbox" name="flexibilityArea" value="Shoulders"> Shoulders</label>
-              <label><input type="checkbox" name="flexibilityArea" value="Back"> Back</label>
-              <label><input type="checkbox" name="flexibilityArea" value="Full body"> Full body</label>
-            </div>
-          </div>
-        </div>
-
-        <p id="goals-error" class="error" hidden></p>
-
-        <div class="onboarding-actions">
-          <button id="goals-back" type="button">Back</button>
-          <button id="goals-next" class="primary" type="button">
-            Continue
-          </button>
-        </div>
+          <p id="feed-status" class="muted" role="status">Updates from everyone.</p>
+          <div id="friends-feed"></div>
+        </section>
 
       </div>
     </section>
 
-    <!-- Onboarding: Workout Preferences -->
-    <section id="preferences-view" hidden>
-      <div class="card onboarding-card">
-
-        <div class="onboarding-progress">
-          <span>STEP 2 OF 3</span>
-          <div class="progress-track">
-            <div class="progress-fill" style="width: 66%"></div>
-          </div>
-        </div>
-
-        <h1>Let's personalize your workouts.</h1>
-        <p>Tell us a little about how you like to exercise.</p>
-
-        <h3>What's your fitness level?</h3>
-        <select id="fitness-level">
-          <option value="">Choose your level</option>
-          <option value="beginner">Beginner</option>
-          <option value="intermediate">Intermediate</option>
-          <option value="advanced">Advanced</option>
-        </select>
-
-        <h3>What types of workouts do you enjoy?</h3>
-        <div class="goal-options">
-          <label><input type="checkbox" name="workoutType" value="Weightlifting"> Weightlifting</label>
-          <label><input type="checkbox" name="workoutType" value="Cardio"> Cardio</label>
-          <label><input type="checkbox" name="workoutType" value="Running"> Running</label>
-          <label><input type="checkbox" name="workoutType" value="Cycling"> Cycling</label>
-          <label><input type="checkbox" name="workoutType" value="Yoga"> Yoga</label>
-          <label><input type="checkbox" name="workoutType" value="Pilates"> Pilates</label>
-          <label><input type="checkbox" name="workoutType" value="Calisthenics"> Calisthenics</label>
-          <label><input type="checkbox" name="workoutType" value="HIIT"> HIIT</label>
-        </div>
-
-        <h3>Where do you typically work out?</h3>
-        <select id="workout-location">
-          <option value="">Choose a location</option>
-          <option value="gym">Gym</option>
-          <option value="home">At home</option>
-          <option value="outdoors">Outdoors</option>
-          <option value="multiple">Multiple locations</option>
-        </select>
-
-        <p id="preferences-error" class="error" hidden></p>
-
-        <div class="onboarding-actions">
-          <button id="preferences-back" type="button">Back</button>
-          <button id="preferences-next" class="primary" type="button">
-            Continue
-          </button>
-        </div>
-
+    <section id="profile-view" class="profile-view" hidden aria-labelledby="profile-title">
+      <div class="home-heading">
+        <h1 id="profile-title" tabindex="-1">My profile</h1>
+        <p id="profile-username" class="muted"></p>
       </div>
+      <section class="feed-column profile-daily-lift" aria-labelledby="daily-lift-title">
+        <div class="feed-heading">
+          <h2 id="daily-lift-title">Recommended lift of the day</h2>
+          <time id="profile-day" class="sample-label"></time>
+        </div>
+        <div id="profile-recommendation"></div>
+      </section>
+      <section class="feed-column" aria-labelledby="profile-posts-title">
+        <div class="feed-heading">
+          <h2 id="profile-posts-title">Your posts</h2>
+          <button id="create-post-profile" class="primary" type="button">Create post</button>
+        </div>
+        <p class="profile-note muted">Your workout updates.</p>
+        <p id="profile-empty" class="profile-note muted">No posts yet. Share your first workout update.</p>
+        <p id="profile-status" class="profile-note muted" role="status"></p>
+        <div id="profile-posts"></div>
+      </section>
     </section>
 
+    <button id="create-post-floating" class="primary floating-post" type="button" hidden>
+      <span aria-hidden="true">＋</span> Create post
+    </button>
 
-    <!-- Onboarding: Fitness Background -->
-    <section id="background-view" hidden>
-      <div class="card onboarding-card">
+    <dialog id="progress-dialog" aria-labelledby="progress-title">
+      <div class="section-heading"><h2 id="progress-title">Your progress</h2><button id="close-progress" type="button">Close</button></div>
+      <p class="muted">Your recorded totals · All time</p>
+      <dl class="progress-summary">
+        <div><dt>Saved workouts</dt><dd id="dashboard-workout-count">—</dd></div>
+        <div><dt>Sets logged</dt><dd id="dashboard-set-count">—</dd></div>
+        <div><dt>Personal records</dt><dd id="dashboard-pr-count">—</dd></div>
+      </dl>
+    </dialog>
 
-        <div class="onboarding-progress">
-          <span>STEP 3 OF 3</span>
-          <div class="progress-track">
-            <div class="progress-fill" style="width: 100%"></div>
-          </div>
+    <dialog id="workout-history-dialog" aria-labelledby="workout-history-title">
+      <div class="section-heading"><h2 id="workout-history-title">All saved workouts</h2><button id="close-workout-history" type="button">Close</button></div>
+      <p id="workout-history-status" class="muted" role="status"></p>
+      <ul id="workout-history-list" class="history-list"></ul>
+    </dialog>
+
+    <dialog id="post-dialog" aria-labelledby="post-title">
+      <form id="post-form">
+        <div class="section-heading">
+          <h2 id="post-title">Create post</h2>
+          <button id="close-post" type="button">Cancel</button>
         </div>
-
-        <h1>Tell us about your fitness journey.</h1>
-        <p>
-          Everyone starts somewhere. This helps us
-          personalize your Fitness Tracker experience.
-        </p>
-
-        <!-- Experience -->
-        <h3>How long have you been working out consistently?</h3>
-
-        <div class="goal-options">
-          <label>
-            <input type="radio" name="fitnessExperience" value="Just starting">
-            Just starting
-          </label>
-
-          <label>
-            <input type="radio" name="fitnessExperience" value="Less than 6 months">
-            Less than 6 months
-          </label>
-
-          <label>
-            <input type="radio" name="fitnessExperience" value="6 months - 2 years">
-            6 months-2 years
-          </label>
-
-          <label>
-            <input type="radio" name="fitnessExperience" value="2 - 5 years">
-            2-5 years
-          </label>
-
-          <label>
-            <input type="radio" name="fitnessExperience" value="5+ years">
-            5+ years
-          </label>
+        <p class="muted">Share an update with the community.</p>
+        <label for="post-content">Your update</label>
+        <textarea id="post-content" name="content" rows="5" maxlength="1000" placeholder="A new PR, a good session, or a lift you’re working on…" required></textarea>
+        <fieldset class="post-workout-picker">
+          <legend>Tag a body part <span class="muted">(optional)</span></legend>
+          <input id="post-body-part" name="bodyPart" type="hidden" value="">
+          <div id="post-tag-options" class="workout-tag-options"></div>
+          <div id="post-tag-preview" aria-live="polite"></div>
+        </fieldset>
+        <p id="post-error" class="error" role="alert" hidden></p>
+        <div class="post-form-footer">
+          <span id="post-count" class="muted">0 / 1,000</span>
+          <button id="post-submit" class="primary" type="submit">Post</button>
         </div>
-
-        <!-- Current activity -->
-        <h3>How often do you currently exercise?</h3>
-
-        <div class="goal-options">
-          <label>
-            <input type="radio" name="activityLevel" value="Rarely">
-            Rarely
-          </label>
-
-          <label>
-            <input type="radio" name="activityLevel" value="1-2 times per week">
-            1-2 times per week
-          </label>
-
-          <label>
-            <input type="radio" name="activityLevel" value="3-4 times per week">
-            3-4 times per week
-          </label>
-
-          <label>
-            <input type="radio" name="activityLevel" value="5+ times per week">
-            5+ times per week
-          </label>
-        </div>
-
-        <!-- Equipment -->
-        <h3>What equipment do you have access to?</h3>
-        <p class="muted">Select all that apply.</p>
-
-        <div class="goal-options">
-          <label>
-            <input type="checkbox" name="equipment" value="Full gym">
-            Full gym
-          </label>
-
-          <label>
-            <input type="checkbox" name="equipment" value="Dumbbells">
-            Dumbbells
-          </label>
-
-          <label>
-            <input type="checkbox" name="equipment" value="Barbells">
-            Barbells
-          </label>
-
-          <label>
-            <input type="checkbox" name="equipment" value="Resistance bands">
-            Resistance bands
-          </label>
-
-          <label>
-            <input type="checkbox" name="equipment" value="Cardio machines">
-            Cardio machines
-          </label>
-
-          <label>
-            <input type="checkbox" name="equipment" value="Bodyweight only">
-            Bodyweight only
-          </label>
-
-          <label>
-            <input type="checkbox" name="equipment" value="Other">
-            Other
-          </label>
-        </div>
-        <p id="background-error" class="error" hidden></p>
-
-        <div class="onboarding-actions">
-          <button id="background-back" type="button">Back</button>
-
-          <button id="background-next" class="primary" type="button">
-            Continue
-          </button>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- Home / Dashboard -->
-    <section id="home-view" class="page" hidden>
-      <div class="card">
-        <h1 id="welcome"></h1>
-        <p>Welcome to your dashboard!</p>
-      </div>
-    </section>
-
-
-    <!-- Feed -->
-    <section id="feed-view" class="page" hidden>
-      <div class="card">
-        <h1>Feed</h1>
-        <p>See what's happening in your community.</p>
-      </div>
-    </section>
-
-
-    <!-- Profile -->
-    <section id="profile-view" class="page" hidden>
-      <div class="card">
-        <h1>My Profile</h1>
-        <p>View and edit your personal information.</p>
-      </div>
-    </section>
-
-
-    <!-- Progress -->
-    <section id="progress-view" class="page" hidden>
-      <div class="card">
-        <h1>My Progress</h1>
-        <p>Track your progress and achievements.</p>
-      </div>
-    </section>
-
-
-    <!-- Plan -->
-    <section id="plan-view" class="page" hidden>
-      <div class="card">
-        <h1>My Plan</h1>
-        <p>View and manage your plans.</p>
-      </div>
-    </section>
-
-
-    <!-- Settings -->
-    <section id="settings-view" class="page" hidden>
-      <div class="card">
-        <h1>Settings</h1>
-        <p>Manage your account and preferences.</p>
-      </div>
-    </section>
-
+        <p class="preview-note muted">Your post will be shared with all users.</p>
+      </form>
+    </dialog>
   </main>
 
-  <script src="app.js"></script>
+  <script src="/lift-tags.js"></script>
+  <script src="/workouts.js"></script>
+  <script src="/feed.js"></script>
+  <script src="/units.js"></script>
+  <script src="/dashboard.js"></script>
+  <script src="/achievements.js"></script>
+  <script src="/planner.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>

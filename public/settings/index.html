@@ -74,6 +74,17 @@
   </section>
 
   <section class="card">
+    <h2>Units</h2>
+    <form id="units-form">
+      <p>Show weights in</p>
+      <label class="radio"><input type="radio" name="weight-unit" value="lb"> Pounds (lb)</label>
+      <label class="radio"><input type="radio" name="weight-unit" value="kg"> Kilograms (kg)</label>
+      <button class="primary" type="submit">Save</button>
+      <p class="msg" role="status" hidden></p>
+    </form>
+  </section>
+
+  <section class="card">
     <h2>Sessions</h2>
     <form id="sessions-form">
       <button type="submit">Log out of all other devices</button>
@@ -101,6 +112,7 @@
     </form>
   </dialog>
 </main>
+<script src="/units.js"></script>
 <script src="settingsPage.js"></script>
 </body>
 </html>

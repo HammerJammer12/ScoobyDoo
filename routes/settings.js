@@ -3,6 +3,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { pool } = require('../db');
+const { isWeightUnit } = require('../public/units');
 
 const router = express.Router();
 
@@ -20,11 +21,11 @@ async function checkPassword(userId, password) {
 
 router.get('/', async (req, res) => {
   const { rows } = await pool.query(
-    'SELECT username, is_private, created_at FROM users WHERE id = $1',
+    'SELECT username, is_private, created_at, weight_unit FROM users WHERE id = $1',
     [req.user.id]
   );
   const u = rows[0];
-  res.json({ username: u.username, isPrivate: u.is_private, createdAt: u.created_at });
+  res.json({ username: u.username, isPrivate: u.is_private, createdAt: u.created_at, weightUnit: u.weight_unit });
 });
 
 router.patch('/username', async (req, res) => {
@@ -64,6 +65,14 @@ router.patch('/privacy', async (req, res) => {
   if (typeof isPrivate !== 'boolean') return res.status(400).json({ error: 'isPrivate must be true or false' });
   await pool.query('UPDATE users SET is_private = $1 WHERE id = $2', [isPrivate, req.user.id]);
   res.json({ isPrivate });
+});
+
+// Display unit only: weights are always stored and sent as kg, pages convert with public/units.js
+router.patch('/weight-unit', async (req, res) => {
+  const { weightUnit } = req.body || {};
+  if (!isWeightUnit(weightUnit)) return res.status(400).json({ error: "weightUnit must be 'lb' or 'kg'" });
+  await pool.query('UPDATE users SET weight_unit = $1 WHERE id = $2', [weightUnit, req.user.id]);
+  res.json({ weightUnit });
 });
 
 router.post('/logout-others', async (req, res) => {

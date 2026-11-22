@@ -12,13 +12,13 @@
    ```
    psql -U postgres -c "CREATE DATABASE liftlog;"
    ```
-3. Paste the following line in a file called `.env` and fill in your Postgres password:
+3. Copy `.env.example` to `.env` and set `DATABASE_URL` for your PostgreSQL instance:
    ```
    DATABASE_URL=postgres://postgres:YOURPASSWORD@localhost:5432/liftlog
    ```
    Special characters in the password (`@ # : / %`) must be URL-encoded.
    Never commit `.env`.
-4. Start the server and open localhost. Takes are created automatically on startup:
+4. Start the server and open localhost. Tables are created automatically on startup:
    ```
    npm start
    ```
@@ -33,6 +33,7 @@
 |---|---|---|
 | `DATABASE_URL` | yes | Postgres connection string |
 | `DATABASE_SSL` | on the host | Set to `true` when the database requires SSL. Should be left unset locally |
+| `NODE_ENV` | on the host | Set to `production` when serving over HTTPS so session cookies require HTTPS. Leave unset for local HTTP. |
 | `PORT` | no | Server port, default 3000 |
 | `EXERCISE_DATASET_URL` | no | Override the dataset used by `npm run seed:exercises` |
 
@@ -41,12 +42,13 @@
 ```
 server.js     Express authentication, sessions, and file serving
 db.js         Everything sql and database
-routes/       Express routers mounted from server.js 
-scripts/      One-off scripts (exercise seeding)
+routes/       Express routers mounted from server.js
 lib/          Logic with no database access (plan recommendations)
-test/         Tests, run with npm test
+scripts/      Exercise library seeding and development demo seeding
+data/         Example lifts for the opt-in demo seed
+test/         Unit and PostgreSQL integration tests, run with npm test
 public/       Front end display logic
-docs/         Project plan (PLAN.md) and Excalidraw diagrams
+docs/         Project plan (PLAN.md) and Excalidraw diagram
 ```
 
 ## API
@@ -57,17 +59,138 @@ docs/         Project plan (PLAN.md) and Excalidraw diagrams
 | POST | `/api/login` | Log in |
 | POST | `/api/logout` | Log out |
 | GET | `/api/me` | Current user (401 if logged out) |
-| GET | `/api/settings` | Username, privacy setting and join date for the settings page |
+| GET | `/api/dashboard` | Own saved-workout, logged-set, and PR counts, latest 3 saved workouts, recent PRs (kg) and the user's `weightUnit` |
+| GET | `/api/workouts` | Signed-in user's saved workouts |
+| GET | `/api/workouts/:id` | Own workout with muscle metadata and recorded sets |
+| GET | `/api/feed` | Latest 50 posts from self and accepted friends |
+| GET | `/api/posts/me` | Latest 50 posts authored by the signed-in user |
+| POST | `/api/posts` | Save `{ content, bodyPart }`; optional `workoutId` also supported |
+| PUT | `/api/posts/:id/like` | Like a visible post (idempotent) |
+| DELETE | `/api/posts/:id/like` | Remove own like |
+| GET | `/api/settings` | Username, privacy setting, weight unit and join date for the settings page |
 | PATCH | `/api/settings/username` | Change username (`{ username }`, 409 if taken) |
 | PATCH | `/api/settings/password` | Change password (`{ currentPassword, newPassword, confirmPassword }`), logs out other sessions |
 | PATCH | `/api/settings/privacy` | Set profile visibility (`{ isPrivate }`, friends-only by default) |
+| PATCH | `/api/settings/weight-unit` | Set display unit for weights (`{ weightUnit: 'lb' \| 'kg' }`, lb by default). Weights in the API are always kg |
 | POST | `/api/settings/logout-others` | End every session except the current one |
 | DELETE | `/api/settings/account` | Delete the account (`{ password }`) and everything that belongs to it |
 | GET | `/api/exercises?q=&muscle=&equipment=&limit=&offset=` | Search the exercise library (limit default 25, max 100) |
+| GET | `/api/exercises/:id/alternatives?level=&equipment=&exclude=&limit=` | Exercises to swap in for this one (same muscle) |
+| POST | `/api/recommendations/plan` | Preview a weekly plan (login required, nothing saved) |
+| POST | `/api/recommendations/save` | Save a previewed plan as one workout template per day (login required) |
 
 Exercise data comes from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain).
 
+### Recommendations
 
+`POST /api/recommendations/plan` takes optional preferences:
+
+```json
+{ "goal": "hypertrophy", "daysPerWeek": 4, "minutesPerSession": 60, "level": "beginner", "equipment": ["dumbbell"] }
+```
+
+- `goal`: `strength`, `hypertrophy` (default) or `endurance`
+- `daysPerWeek`: 1–6 (default 3); `minutesPerSession`: 20–180 (default 60)
+- `level`: `beginner` (default), `intermediate` or `expert`
+- `equipment`: leave out for a full gym; bodyweight is always allowed
+
+It returns `{ plan: { ...preferences, split, days: [{ day, name, focus, exercises: [...] }] } }`. Each exercise has
+`exercise_id`, `name`, `primary_muscle`, `equipment`, `mechanic`, `tracking_type`, `sets`, `rep_min`, `rep_max`
+and `duration_secs` (timed exercises have no reps). Exercises from the user's last 5 workouts are avoided when possible.
+
+To swap one, call `/api/exercises/:id/alternatives` with the same `level` and `equipment` (comma-separated), and
+`exclude` set to the ids already in that day.
+
+To save, `POST /api/recommendations/save` with `{ name, days }`, where `days` is the (edited) `plan.days`. Only `name`,
+`exercises[].exercise_id`, `sets`, `rep_min`, `rep_max` and `duration_secs` are read, so other fields can be
+dropped to stay under the 10 KB request limit. Each day becomes a workout template named `<plan name> - <day name>`,
+with the top of the rep range as its target reps.
+
+All workout/post endpoints require a session. Workouts are scoped to their owner;
+workout tags are checked on the server before saving. Feed queries include only
+the user and accepted friends (either friendship direction). The profile query
+always uses the session user, never a supplied author ID.
+
+For now, all accounts are automatically friends. Startup accepts existing
+requests and connects any missing user pairs. A PostgreSQL trigger connects each
+new account to all existing accounts, including accounts created by seed scripts.
+Everyone's posts therefore appear in the shared feed and can be liked; profiles
+still show only the signed-in user's posts, and workout ownership checks remain.
+The temporary behavior is isolated in `db.js` under `auto_friend_new_user` and
+the accompanying startup backfill for later replacement with friend requests.
+
+## PostgreSQL storage
+
+After login, Dashboard is the default view. Community contains the social feed,
+posting, tags, and likes; Profile contains the user's posts. Posts display calendar
+dates only, while their full timestamps remain in PostgreSQL for sorting.
+
+The dashboard follows the supplied wireframe: left navigation rail, underlined
+date header, notification strip, today's workout beside three goal circles,
+stacked recent activities beside achievements, and a progress button underneath.
+View all opens saved workout history; Check your progress opens the user's real
+totals. Unconnected Planner, Track workout, Settings, and Start workout controls
+are disabled placeholders. On screens up to 512px, the navigation uses a hamburger.
+
+The dashboard uses real counts from the signed-in user's records and suggests a
+lift from their saved workouts. Its three recent entries are ordered by save ID,
+clearly labeled as save order until workout dates are added. Goals and scheduled
+plans show an empty/connection state; no progress percentages or dates are invented.
+
+Posts, tags, likes, users, sessions, workouts, and friendships live in PostgreSQL.
+There is no in-memory fallback. Empty databases show empty states. Posts and likes
+survive reloads, logout, and server restarts. Deleting a tagged workout preserves
+the post and clears its tag; deleting a user cascades their records.
+
+Startup creates missing tables and indexes and renames the legacy `excercise`
+tables/columns without dropping their rows. Repeated startup is safe. Workout
+summaries use the first exercise for muscle metadata; details include saved sets.
+The daily lift rotates through the user's workouts by local calendar date.
+
+The composer offers four directly clickable body-part tags: Arms (purple, 💪),
+Legs (teal, 🦵), Back (amber, 🏋️), and Chest (blue, 🏋️), plus No tag.
+These are available to every account, even with no saved workouts. The selected
+value is stored in `posts.body_part`, with a database constraint and server-side
+validation. Existing tagged demo workouts are mapped to their body-part tag on
+startup. Workout recommendations keep the same color cues and their lift names.
+The optional `workoutId` API field still supports linking an owned saved workout.
+
+## Optional development demo
+
+Create your account in the app, then run:
+
+```sh
+npm run seed:demo -- YOUR_USERNAME
+```
+
+This explicitly seeds four empty workouts, two clearly named demo friends,
+accepted friendships, and demo posts into the configured database. It creates no
+completed sets and is repeatable without adding duplicate examples. It refuses
+to run with `NODE_ENV=production`. It is never run automatically on startup.
+Real friend-request management and workout creation can plug into the existing
+tables through their own feature branches.
+
+This checkout's local preview stores PostgreSQL data under `.local/postgres` on
+port 55432, with its connection in the ignored `.env`. Both are excluded from git.
+If that local instance is stopped, start it with PostgreSQL's binaries on PATH:
+
+```sh
+pg_ctl -D "$PWD/.local/postgres" -l "$PWD/.local/postgres.log" -o "-h 127.0.0.1 -p 55432" start
+npm start
+```
+
+For a different PostgreSQL instance, use `.env.example` and the setup steps above.
+
+## Integration tests
+
+```sh
+TEST_DATABASE_URL=postgres://USER:PASSWORD@localhost:5432/DEVELOPMENT_DB npm test
+```
+
+The tests use a randomly named schema and remove only that schema afterward.
+They cover legacy migration, persisted posts/tags, ownership checks, friend-feed
+visibility, profile filtering, idempotent likes, and foreign-key deletion behavior.
+They require schema-creation permission and are skipped without `TEST_DATABASE_URL`.
 
 ## Contributing
 
@@ -77,3 +200,23 @@ Exercise data comes from [free-exercise-db](https://github.com/yuhonas/free-exer
 - Schema changes go in `db.js` using `CREATE TABLE IF NOT EXISTS`
 - Don't commit secrets, `.env`, or `node_modules`.
 - Keep Project Structure in this doc updated, hopefully makes changes easier going forward
+
+### Workout planner
+
+Planner now supports a Monday–Sunday seven-day plan and a full-month calendar,
+following the supplied wireframe. Add up to ten of your saved workouts to each
+day, remove entries, name and save a plan, and reopen it with **Load plan**.
+Empty days are rest days. Workout dots use the Arms/Legs/Back/Chest colors, with
+gray for other muscle groups. On narrow screens, the calendar scrolls horizontally.
+Changing the plan type or start date creates a new empty plan and asks before
+replacing unsaved edits. While viewing a monthly plan, **Load plan** also lets you
+repeat a saved weekly pattern across that month; monthly plans cannot overwrite
+a weekly pattern through this copy action.
+
+Authenticated `GET /api/plans`, `GET /api/plans/:id`, `POST /api/plans`, and
+`PUT /api/plans/:id` use the PostgreSQL `workout_plans` table. Each plan stores its
+owner, name, type, start date, and ordered day arrays of workout IDs in JSONB.
+Saves validate dates, day counts and workout ownership in a transaction. A workout
+removed after saving is shown as unavailable and must be removed from the plan
+before saving again. Plans schedule workouts; they do not create completed workout
+logs or yet replace the dashboard's suggested lift.

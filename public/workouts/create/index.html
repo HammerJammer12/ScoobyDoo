@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Workout</title>
+  <style>
+  </style>
+</head>
+<body>
+<main>
+  <p><a href="/">&larr; Home</a></p>
+  <h1>Create Workout</h1>
+
+  <form id="workout-form" novalidate>
+    <div class="card">
+      <label for="w-name">Workout name</label>
+      <input id="w-name" maxlength="100" placeholder="Push day" required>
+    </div>
+
+    <div id="exercises"></div>
+
+    <button type="button" id="add-exercise">+ Add exercise</button>
+
+    <p id="error" role="alert" hidden></p>
+    <p id="status" hidden></p>
+
+    <div class="actions">
+      <span></span>
+      <button class="primary" id="save" type="submit">Save workout</button>
+    </div>
+  </form>
+</main>
+<script src="createWorkout.js"></script>
+</body>
+</html>

@@ -4,9 +4,10 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "node --test",
+    "test": "node --test test/*.test.js",
     "start": "node --env-file-if-exists=.env server.js",
-    "seed:exercises": "node --env-file-if-exists=.env scripts/seed-exercises.js"
+    "seed:exercises": "node --env-file-if-exists=.env scripts/seed-exercises.js",
+    "seed:demo": "node --env-file-if-exists=.env scripts/seed-demo.js"
   },
   "keywords": [],
   "author": "",

@@ -19,13 +19,9 @@ const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 
 function validateBody(body) {
   if (!body || typeof body !== 'object') return 'Body must be a JSON object';
-
   if (typeof body.name !== 'string' || !body.name.trim()) return 'Workout name is required';
-
   if (body.name.length > 100) return 'Workout name is too long (max 100)';
-
   if (!Array.isArray(body.exercises) || body.exercises.length === 0) return 'Add at least one exercise';
-
   if (body.exercises.length > MAX_EXERCISES) return `Too many exercises (max ${MAX_EXERCISES})`;
 
   for (const ex of body.exercises) {
@@ -79,6 +75,48 @@ router.post('/workouts', wrap(async (req, res) => {
       if (setErr) return res.status(400).json({ error: setErr });
     }
   }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows: [w] } = await client.query(
+      `INSERT INTO workouts (user_id, name)
+       VALUES ($1, $2)
+       RETURNING id`,
+      [req.user.id, name.trim()]
+    );
+
+    for (const [i, ex] of exercises.entries()) {
+      const { rows: [we] } = await client.query(
+        `INSERT INTO workout_exercises (workout_id, exercise_id, position_in_workout)
+         VALUES ($1, $2, $3) RETURNING id`,
+        [w.id, ex.exerciseId, i + 1]
+      );
+      for (const [j, set] of ex.sets.entries()) {
+        await client.query(
+          `INSERT INTO workout_sets
+             (workout_exercise_id, set_number, weight_kgs, reps, duration_secs, distance_meters)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [
+            we.id,
+            j + 1,
+            set.weightKgs ?? null,
+            set.reps ?? null,
+            set.durationSecs ?? null,
+            set.distanceMeters ?? null,
+          ]
+        );
+      }
+    }
+    await client.query('COMMIT');
+    res.status(201).json({ id: w.id });
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}));
 
 router.get('/workouts', wrap(async (req, res) => {
   const { rows } = await pool.query(
@@ -164,48 +202,6 @@ router.get('/workouts/:id', wrap(async (req, res) => {
   }
 
   res.json({ id: workout.id, name: workout.name, exercises });
-}));
-
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const { rows: [w] } = await client.query(
-      `INSERT INTO workouts (user_id, name)
-       VALUES ($1, $2)
-       RETURNING id`,
-      [req.user.id, name.trim()]
-    );
-
-    for (const [i, ex] of exercises.entries()) {
-      const { rows: [we] } = await client.query(
-        `INSERT INTO workout_exercises (workout_id, exercise_id, position_in_workout)
-         VALUES ($1, $2, $3) RETURNING id`,
-        [w.id, ex.exerciseId, i + 1]
-      );
-      for (const [j, set] of ex.sets.entries()) {
-        await client.query(
-          `INSERT INTO workout_sets
-             (workout_exercise_id, set_number, weight_kgs, reps, duration_secs, distance_meters)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [
-            we.id,
-            j + 1,
-            set.weightKgs ?? null,
-            set.reps ?? null,
-            set.durationSecs ?? null,
-            set.distanceMeters ?? null,
-          ]
-        );
-      }
-    }
-    await client.query('COMMIT');
-    res.status(201).json({ id: w.id });
-  } catch (e) {
-    await client.query('ROLLBACK');
-    throw e;
-  } finally {
-    client.release();
-  }
 }));
 
 module.exports = router;

@@ -1,0 +1,37 @@
+/* Goals & achievements page. Uses your existing tokens where they exist; falls back to neutrals. */
+#achievements-view .progress-summary { margin-bottom: 1.5rem; }
+
+.goals-toolbar { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin-bottom: .75rem; }
+
+.goal-list, .record-board { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; }
+.record-board { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+
+.goal-item, .record-card {
+  border: 1px solid rgba(127, 127, 127, .35);
+  border-radius: 10px;
+  padding: .85rem 1rem;
+}
+.goal-item h3, .record-card h3 { margin: 0 0 .35rem; font-size: 1rem; }
+.goal-top { display: flex; justify-content: space-between; gap: .75rem; align-items: baseline; }
+.goal-item progress { width: 100%; height: .7rem; margin: .35rem 0; }
+.goal-item p { margin: 0 0 .35rem; }
+
+.goal-status { font-size: .8rem; font-weight: 600; white-space: nowrap; }
+.goal-done .goal-status { color: #1a7f37; }
+.goal-on-track .goal-status { color: #1a7f37; }
+.goal-behind .goal-status, .goal-overdue .goal-status { color: #b45309; }
+.goal-done { opacity: .85; }
+
+.record-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; }
+.record-rows li { display: flex; gap: .5rem; align-items: baseline; flex-wrap: wrap; }
+
+.records-controls { margin-bottom: .75rem; }
+.records-controls input { max-width: 20rem; }
+
+#goal-form label { display: block; margin-bottom: .75rem; }
+#goal-form input, #goal-form select { display: block; width: 100%; }
+
+.goal-sub { margin: 0 0 .25rem; font-weight: 500; }
+.goal-actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+#goal-form select, #goal-log-form input { display: block; width: 100%; }
+#goal-log-form label { display: block; margin-bottom: .75rem; }

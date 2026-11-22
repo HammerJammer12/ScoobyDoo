@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Workout app</title>
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/achievements.css">
 </head>
 <body>
   <header class="topbar">
@@ -17,7 +18,7 @@
         <button type="button" disabled title="Workout tracking coming soon">Track workout</button>
         <button id="view-community" type="button" data-view="community">Community</button>
         <button id="view-progress" type="button">Progress</button>
-        <button id="view-achievements" type="button">Achievements</button>
+        <button id="view-achievements" type="button" data-view="achievements">Achievements</button>
         <button id="view-profile" type="button" data-view="profile">Profile</button>
         <button type="button" disabled title="Settings coming soon">Settings</button>
       </div>
@@ -65,6 +66,118 @@
       </div>
     </dialog>
 
+
+<!-- Onboarding screens -->
+
+<section id="welcome-view" hidden>
+  <h1>Welcome to your fitness journey!</h1>
+  <p>Let's personalise your workout experience.</p>
+  <button id="welcome-next" type="button">Get started</button>
+</section>
+
+<section id="goals-view" hidden>
+  <h1>What are your fitness goals?</h1>
+
+  <label>
+    <input type="checkbox" name="goal" value="weight" data-goal="weight">
+    Weight management
+  </label>
+
+  <div id="weight-details" hidden>
+    <label>
+      <input type="radio" name="weightFocus" value="lose">
+      Lose weight
+    </label>
+    <label>
+      <input type="radio" name="weightFocus" value="gain">
+      Gain weight
+    </label>
+    <label>
+      <input type="radio" name="weightFocus" value="maintain">
+      Maintain weight
+    </label>
+  </div>
+
+  <label>
+    <input type="checkbox" name="goal" value="strength" data-goal="strength">
+    Build strength
+  </label>
+  <div id="strength-details" hidden>
+    <label><input type="checkbox" value="general"> General strength</label>
+    <label><input type="checkbox" value="powerlifting"> Powerlifting</label>
+  </div>
+
+  <label>
+    <input type="checkbox" name="goal" value="muscle" data-goal="muscle">
+    Build muscle
+  </label>
+  <div id="muscle-details" hidden>
+    <label><input type="checkbox" value="upper-body"> Upper body</label>
+    <label><input type="checkbox" value="lower-body"> Lower body</label>
+    <label><input type="checkbox" value="full-body"> Full body</label>
+  </div>
+
+  <p id="goals-error" class="error" hidden></p>
+  <button id="goals-back" type="button">Back</button>
+  <button id="goals-next" type="button">Continue</button>
+</section>
+
+<section id="preferences-view" hidden>
+  <h1>Your workout preferences</h1>
+
+  <label>Fitness level
+    <select id="fitness-level">
+      <option value="">Choose one</option>
+      <option value="beginner">Beginner</option>
+      <option value="intermediate">Intermediate</option>
+      <option value="advanced">Advanced</option>
+    </select>
+  </label>
+
+  <p>What types of workouts do you enjoy?</p>
+  <label><input type="checkbox" name="workoutType" value="strength"> Strength</label>
+  <label><input type="checkbox" name="workoutType" value="cardio"> Cardio</label>
+  <label><input type="checkbox" name="workoutType" value="flexibility"> Flexibility</label>
+
+  <label>Where do you work out?
+    <select id="workout-location">
+      <option value="">Choose one</option>
+      <option value="gym">Gym</option>
+      <option value="home">Home</option>
+      <option value="outdoors">Outdoors</option>
+    </select>
+  </label>
+
+  <p id="preferences-error" class="error" hidden></p>
+  <button id="preferences-back" type="button">Back</button>
+  <button id="preferences-next" type="button">Continue</button>
+</section>
+
+<section id="background-view" hidden>
+  <h1>Tell us about your experience</h1>
+
+  <p>How experienced are you with fitness?</p>
+  <label><input type="radio" name="fitnessExperience" value="new"> New to fitness</label>
+  <label><input type="radio" name="fitnessExperience" value="some"> Some experience</label>
+  <label><input type="radio" name="fitnessExperience" value="experienced"> Experienced</label>
+
+  <p>How active are you currently?</p>
+  <label><input type="radio" name="activityLevel" value="low"> Not very active</label>
+  <label><input type="radio" name="activityLevel" value="moderate"> Moderately active</label>
+  <label><input type="radio" name="activityLevel" value="high"> Very active</label>
+
+  <p>What equipment do you have access to?</p>
+  <label><input type="checkbox" name="equipment" value="full-gym"> Full gym</label>
+  <label><input type="checkbox" name="equipment" value="dumbbells"> Dumbbells</label>
+  <label><input type="checkbox" name="equipment" value="bodyweight"> Bodyweight only</label>
+  <label><input type="checkbox" name="equipment" value="resistance-bands"> Resistance bands</label>
+
+  <p id="background-error" class="error" hidden></p>
+  <button id="background-back" type="button">Back</button>
+  <button id="background-next" type="button">Finish</button>
+</section>
+
+
     <!-- Logged-in view -->
     <section id="dashboard-view" hidden aria-labelledby="dashboard-title">
       <div class="dashboard-heading">
@@ -103,10 +216,11 @@
           <ol id="dashboard-recent" class="recent-workouts"></ol>
           <button id="dashboard-view-all" class="view-all" type="button">View all <span aria-hidden="true">⟶</span></button>
         </section>
-        <section id="dashboard-achievements-card" class="dashboard-card achievements-card" aria-labelledby="achievements-title" tabindex="-1">
-          <h2 id="achievements-title">Recent achievements</h2>
+        <section id="dashboard-achievements-card" class="dashboard-card achievements-card" aria-labelledby="dashboard-achievements-title" tabindex="-1">
+          <h2 id="dashboard-achievements-title">Recent achievements</h2>
           <p id="dashboard-achievements-empty" class="muted">No personal records yet.</p>
           <ul id="dashboard-achievements" class="achievement-list"></ul>
+          <button id="dashboard-view-achievements" class="view-all" type="button">Goals &amp; all records <span aria-hidden="true">⟶</span></button>
         </section>
         <button id="dashboard-check-progress" class="check-progress" type="button">Check your progress <span aria-hidden="true">⟶</span></button>
       </div>
@@ -149,6 +263,92 @@
     <dialog id="planner-load-dialog" aria-labelledby="planner-load-title">
       <div class="section-heading"><h2 id="planner-load-title">Saved plans</h2><button id="planner-load-close" type="button">Close</button></div>
       <p id="planner-load-status" role="status"></p><ul id="planner-saved-list" class="history-list"></ul>
+    </dialog>
+
+    <section id="achievements-view" hidden aria-labelledby="achievements-title">
+      <div class="home-heading">
+        <h1 id="achievements-title" tabindex="-1">Goals &amp; achievements</h1>
+        <p class="muted">Set targets, track your progress and see every personal record.</p>
+      </div>
+      <p id="achievements-status" class="muted" role="status"></p>
+      <button id="achievements-retry" type="button" hidden>Retry</button>
+
+      <dl class="progress-summary" aria-label="Your totals">
+        <div><dt>Saved workouts</dt><dd id="achievements-workouts">—</dd></div>
+        <div><dt>Sets logged</dt><dd id="achievements-sets">—</dd></div>
+        <div><dt>Personal records</dt><dd id="achievements-prs">—</dd></div>
+      </dl>
+
+      <section class="feed-column" aria-labelledby="goals-page-title">
+        <div class="feed-heading">
+          <h2 id="goals-page-title">Your goals</h2>
+          <button id="goal-add" class="primary" type="button">New goal</button>
+        </div>
+        <p id="goals-page-status" class="muted" role="status"></p>
+        <p id="goals-empty" class="muted" hidden>No goals yet. Set a PR target, a time or distance, or a workout count to start tracking.</p>
+        <ul id="goals-list" class="goal-list"></ul>
+      </section>
+
+      <section class="feed-column" aria-labelledby="records-title">
+        <div class="feed-heading">
+          <h2 id="records-title">Personal records</h2>
+        </div>
+        <div class="records-controls">
+          <label>Search exercises <input id="records-search" type="search" placeholder="e.g. bench"></label>
+        </div>
+        <p id="records-empty" class="muted" hidden>No personal records yet.</p>
+        <p id="records-none" class="muted" hidden>No exercises match that search.</p>
+        <ul id="records-board" class="record-board"></ul>
+      </section>
+    </section>
+
+    <dialog id="goal-dialog" aria-labelledby="goal-dialog-title">
+      <form id="goal-form">
+        <div class="section-heading"><h2 id="goal-dialog-title">New goal</h2><button id="goal-cancel" type="button">Cancel</button></div>
+        <label>Goal type
+          <select id="goal-kind">
+            <option value="exercise">Exercise goal (PR, time, distance…)</option>
+            <option value="workouts">Save more workouts</option>
+            <option value="sets">Log more sets</option>
+            <option value="prs">Set more personal records</option>
+          </select>
+        </label>
+
+        <div id="goal-exercise-fields">
+          <label>Exercise <input id="goal-exercise" list="goal-exercise-list" autocomplete="off" placeholder="e.g. Bench Press or 5K Run"></label>
+          <datalist id="goal-exercise-list"></datalist>
+          <p id="goal-exercise-hint" class="muted" role="status"></p>
+          <label>What are you improving? <select id="goal-metric"></select></label>
+          <label id="goal-qual-wrap" hidden><span id="goal-qual-label">Extra condition</span> <input id="goal-qual" inputmode="decimal"></label>
+          <label id="goal-unit-wrap" hidden>Distance unit
+            <select id="goal-unit">
+              <option value="km">Kilometres</option>
+              <option value="mi">Miles</option>
+              <option value="m">Metres</option>
+            </select>
+          </label>
+          <label><span id="goal-target-label">Target</span> <input id="goal-target" inputmode="decimal" autocomplete="off"></label>
+          <p id="goal-preview" class="muted" role="status"></p>
+        </div>
+
+        <div id="goal-count-fields" hidden>
+          <label><span id="goal-count-label">How many more?</span> <input id="goal-count" type="number" min="1" step="1" inputmode="numeric"></label>
+        </div>
+
+        <label>Deadline <span class="muted">(optional)</span> <input id="goal-deadline" type="date" min="1900-01-01" max="2200-12-31"></label>
+        <p id="goal-error" class="error" role="alert" hidden></p>
+        <button class="primary" type="submit">Add goal</button>
+      </form>
+    </dialog>
+
+    <dialog id="goal-log-dialog" aria-labelledby="goal-log-title">
+      <form id="goal-log-form">
+        <div class="section-heading"><h2 id="goal-log-title">Log a result</h2><button id="goal-log-cancel" type="button">Cancel</button></div>
+        <p id="goal-log-context" class="muted"></p>
+        <label><span id="goal-log-label">Result</span> <input id="goal-log-value" inputmode="decimal" autocomplete="off" required></label>
+        <p id="goal-log-error" class="error" role="alert" hidden></p>
+        <button class="primary" type="submit">Save result</button>
+      </form>
     </dialog>
 
     <section id="community-view" hidden aria-labelledby="community-title">
@@ -251,6 +451,7 @@
   <script src="/feed.js"></script>
   <script src="/units.js"></script>
   <script src="/dashboard.js"></script>
+  <script src="/achievements.js"></script>
   <script src="/planner.js"></script>
   <script src="/app.js"></script>
 </body>

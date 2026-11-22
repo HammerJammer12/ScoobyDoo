@@ -154,11 +154,41 @@ app.get('/api/me', requireAuth, (req, res) => {
 app.use('/api', requireAuth, require('./routes/workouts'))
 app.use('/api/plans', requireAuth, require('./routes/plans'));
 app.use('/api/workouts', requireAuth, require('./routes/workout-views'));
+app.get('/api/workouts/sets', requireAuth, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT
+         ws.id,
+         ws.workout_exercise_id,
+         we.workout_id,
+         we.exercise_id,
+         e.name AS exercise_name,
+         e.tracking_type,
+         ws.set_number,
+         ws.weight_kgs,
+         ws.reps,
+         ws.duration_secs,
+         ws.distance_meters,
+         w.name AS workout_name
+       FROM workout_sets ws
+       JOIN workout_exercises we ON we.id = ws.workout_exercise_id
+       JOIN workouts w ON w.id = we.workout_id
+       JOIN exercises e ON e.id = we.exercise_id
+       WHERE w.user_id = $1
+       ORDER BY w.id ASC, we.position_in_workout ASC, ws.set_number ASC, ws.id ASC`,
+      [req.user.id]
+    );
+    res.json({ sets: rows });
+  } catch (err) {
+    next(err);
+  }
+});
 app.get('/api/dashboard', requireAuth, async (req, res) => {
   res.json({ ...await getDashboard(req.user.id), weightUnit: req.user.weight_unit });
 });
 app.use('/api', requireAuth, require('./routes/posts'));
 app.use('/api/settings', requireAuth, require('./routes/settings'));
+app.use('/api/onboarding', requireAuth, require('./routes/onboarding'));
 
 const EXERCISE_IMAGE_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
 const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null);

@@ -70,6 +70,19 @@ async function init() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT true;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS weight_unit TEXT NOT NULL DEFAULT 'lb' CHECK (weight_unit IN ('lb', 'kg'));
 
+    CREATE TABLE IF NOT EXISTS user_onboarding (
+      user_id INTEGER PRIMARY KEY
+        REFERENCES users(id) ON DELETE CASCADE,
+      goals JSONB NOT NULL DEFAULT '[]'::jsonb,
+      goal_details JSONB NOT NULL
+        DEFAULT '{}'::jsonb,
+      preferences JSONB NOT NULL
+        DEFAULT '{}'::jsonb,
+      background JSONB NOT NULL
+        DEFAULT '{}'::jsonb,
+      completed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
     CREATE TABLE IF NOT EXISTS sessions (
       token TEXT PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -338,4 +351,56 @@ async function getDashboard(userId) {
   return { summary, recentWorkouts, recentAchievements, recentOrder: 'save-order' };
 }
 
-module.exports = { pool, init, getWorkouts, getWorkout, getPosts, createPost, setPostLike, getDashboard };
+async function saveOnboarding(userId, data) {
+  const { rows } = await pool.query(`
+    INSERT INTO user_onboarding (
+      user_id,
+      goals,
+      goal_details,
+      preferences,
+      background
+    )
+    VALUES ($1, $2::jsonb, $3::jsonb, $4::jsonb, $5::jsonb)
+
+    ON CONFLICT (user_id)
+    DO UPDATE SET
+      goals = EXCLUDED.goals,
+      goal_details = EXCLUDED.goal_details,
+      preferences = EXCLUDED.preferences,
+      background = EXCLUDED.background,
+      completed_at = now()
+
+    RETURNING user_id, completed_at
+  `, [
+    userId,
+    JSON.stringify(data.goals),
+    JSON.stringify(data.goalDetails),
+    JSON.stringify(data.preferences),
+    JSON.stringify(data.background)
+  ]);
+
+  return rows[0];
+}
+
+async function getOnboarding(userId) {
+  const { rows } = await pool.query(
+    `SELECT * FROM user_onboarding WHERE user_id = $1`,
+    [userId]
+  );
+
+  return rows[0] || null;
+}
+
+
+module.exports = {
+  pool,
+  init,
+  getWorkouts,
+  getWorkout,
+  getPosts,
+  createPost,
+  setPostLike,
+  getDashboard,
+  saveOnboarding,
+  getOnboarding
+};

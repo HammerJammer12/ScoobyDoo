@@ -77,6 +77,9 @@ docs/         Project plan (PLAN.md) and Excalidraw diagram
 | GET | `/api/exercises/:id/alternatives?level=&equipment=&exclude=&limit=` | Exercises to swap in for this one (same muscle) |
 | POST | `/api/recommendations/plan` | Preview a weekly plan (login required, nothing saved) |
 | POST | `/api/recommendations/save` | Save a previewed plan as one workout template per day (login required) |
+| GET | `/api/templates` | Signed-in user's workout templates with their exercises and targets |
+| GET | `/api/templates/:id` | One of the user's templates (404 for anyone else's) |
+| DELETE | `/api/templates/:id` | Delete one of the user's templates |
 
 Exercise data comes from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain).
 
@@ -106,6 +109,9 @@ To save, `POST /api/recommendations/save` with `{ name, days }`, where `days` is
 `exercises[].exercise_id`, `sets`, `rep_min`, `rep_max` and `duration_secs` are read, so other fields can be
 dropped to stay under the 10 KB request limit. Each day becomes a workout template named `<plan name> - <day name>`,
 with the top of the rep range as its target reps.
+
+Saved days are listed at `/my-plans/`. Start opens `/workouts/create/?template=ID`, which fills in the
+workout name, exercises, one row per target set and the target reps or seconds; the user adds weights and saves.
 
 All workout/post endpoints require a session. Workouts are scoped to their owner;
 workout tags are checked on the server before saving. Feed queries include only

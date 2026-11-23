@@ -119,6 +119,26 @@
     exEl.append(head, setsEl, addSet);
     $('exercises').appendChild(exEl);
     addSetRow(exEl);
+    return exEl;
+  }
+
+  // Fills the form from a saved template (/workouts/create/?template=ID): the name, each exercise,
+  // one row per target set, with target reps or seconds filled in. Weights are left for the user.
+  async function loadTemplate(id) {
+    const { template } = await api('GET', `/api/templates/${encodeURIComponent(id)}`);
+    $('w-name').value = template.name;
+    for (const t of template.exercises) {
+      const exEl = addExercise();
+      const select = exEl.querySelector('select');
+      select.value = String(t.exercise_id);
+      const setsEl = exEl.querySelector('.sets');
+      setsEl.innerHTML = '';
+      for (let i = 0; i < (t.target_sets || 1); i++) addSetRow(exEl);
+      for (const input of setsEl.querySelectorAll('input')) {
+        if (input.dataset.key === 'reps' && t.target_reps) input.value = t.target_reps;
+        if (input.dataset.key === 'durationSecs' && t.target_duration) input.value = t.target_duration;
+      }
+    }
   }
 
   function collect() {
@@ -170,7 +190,15 @@
     try {
       ({ exercises } = await api('GET', '/api/exercises'));
       if (!exercises.length) return showError('No exercises in database');
-      addExercise();
+      const templateId = new URLSearchParams(window.location.search).get('template');
+      if (!templateId) return addExercise();
+      try {
+        await loadTemplate(templateId);
+      } catch (ex) {
+        if (ex.status === 401) throw ex;
+        showError(`Could not load that plan day: ${ex.message}`);
+        if (!$('exercises').children.length) addExercise();
+      }
     } catch (ex) {
       if (ex.status === 401) window.location.href = '/';
       else showError(ex.message);

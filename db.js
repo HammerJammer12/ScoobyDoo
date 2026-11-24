@@ -168,15 +168,6 @@ async function init() {
 
     CREATE UNIQUE INDEX IF NOT EXISTS ux_exercises_name ON exercises (lower(name));
 
-INSERT INTO exercises (name, primary_muscle, tracking_type) VALUES
-  ('Barbell Back Squat', 'quads', 'weight_and_reps'),
-  ('Bench Press', 'chest', 'weight_and_reps'),
-  ('Deadlift', 'back', 'weight_and_reps'),
-  ('Overhead Press', 'shoulders', 'weight_and_reps'),
-  ('Pull-up', 'back', 'reps_only'),
-  ('Plank', 'core', 'duration'),
-  ('Running', 'legs', 'distance')
-ON CONFLICT DO NOTHING;
     CREATE TABLE IF NOT EXISTS friendships (
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       friend_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -252,16 +243,74 @@ async function getWorkouts(userId, id = null) {
   return rows;
 }
 
+async function getWorkoutHistory(userId) {
+  const { rows } = await pool.query(
+    `SELECT w.id,
+            COUNT(DISTINCT we.id)::int AS exercise_count,
+            COUNT(ws.id)::int          AS set_count
+       FROM workouts w
+       LEFT JOIN workout_exercises we ON we.workout_id = w.id
+       LEFT JOIN workout_sets ws      ON ws.workout_exercise_id = we.id
+      WHERE w.user_id = $1
+      GROUP BY w.id
+      ORDER BY w.id DESC`,
+    [userId]
+  );
+
+  const base = new Map((await getWorkouts(userId)).map((w) => [w.id, w]));
+
+  return rows.map((r) => ({
+    ...base.get(String(r.id)),
+    exerciseCount: r.exercise_count,
+    setCount: r.set_count,
+  }));
+}
+
 async function getWorkout(userId, id) {
-  const [workout] = await getWorkouts(userId, id);
+  const { rows: [workout] } = await pool.query(
+    'SELECT id, name FROM workouts WHERE id = $1 AND user_id = $2',
+    [id, userId]
+  );
   if (!workout) return null;
-  const { rows } = await pool.query(`
-    SELECT s.* FROM workout_sets s
-    JOIN workout_exercises we ON we.id = s.workout_exercise_id
-    JOIN workouts w ON w.id = we.workout_id
-    WHERE w.id = $1 AND w.user_id = $2
-    ORDER BY we.position_in_workout, we.id, s.set_number, s.id`, [id, userId]);
-  return { ...workout, sets: rows };
+
+  const { rows } = await pool.query(
+    `SELECT we.id AS workout_exercise_id,
+            e.id AS exercise_id, e.name, e.primary_muscle, e.tracking_type,
+            ws.set_number, ws.weight_kgs, ws.reps, ws.duration_secs, ws.distance_meters
+       FROM workout_exercises we
+       JOIN exercises e ON e.id = we.exercise_id
+       LEFT JOIN workout_sets ws ON ws.workout_exercise_id = we.id
+      WHERE we.workout_id = $1
+      ORDER BY we.position_in_workout, we.id, ws.set_number`,
+    [id]
+  );
+
+  const exercises = [];
+  const byWe = new Map();
+  for (const r of rows) {
+    let ex = byWe.get(r.workout_exercise_id);
+    if (!ex) {
+      ex = {
+        exerciseId: r.exercise_id,
+        name: r.name,
+        primaryMuscle: r.primary_muscle,
+        trackingType: r.tracking_type,
+        sets: [],
+      };
+      byWe.set(r.workout_exercise_id, ex);
+      exercises.push(ex);
+    }
+    if (r.set_number != null) {
+      const set = { setNumber: r.set_number };
+      if (r.weight_kgs != null) set.weightKgs = r.weight_kgs;
+      if (r.reps != null) set.reps = r.reps;
+      if (r.duration_secs != null) set.durationSecs = r.duration_secs;
+      if (r.distance_meters != null) set.distanceMeters = r.distance_meters;
+      ex.sets.push(set);
+    }
+  }
+
+  return { id: workout.id, name: workout.name, exercises };
 }
 
 // Posts are readable by their author and accepted friends, in either direction.
@@ -338,4 +387,4 @@ async function getDashboard(userId) {
   return { summary, recentWorkouts, recentAchievements, recentOrder: 'save-order' };
 }
 
-module.exports = { pool, init, getWorkouts, getWorkout, getPosts, createPost, setPostLike, getDashboard };
+module.exports = { pool, init, getWorkouts, getWorkout, getPosts, createPost, setPostLike, getDashboard, getWorkoutHistory };

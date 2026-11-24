@@ -50,7 +50,13 @@ window.createDashboardView = (api) => {
       try {
         const { workout: selected } = await api('GET', `/api/workouts/${encodeURIComponent(workout.id)}`);
         if (activeVersion !== version || request !== currentRequest) return;
-        details.textContent = `Primary muscle: ${selected.primary_muscle}. Also active: ${selected.secondary_muscles.join(', ') || 'Not specified'}.`;
+
+        const names = (selected.exercises || []).map((e) => e.name).join(', ');
+        const muscles = new Set((selected.exercises || []).map((e) => e.primaryMuscle).filter(Boolean));
+        const primary = selected.primary_muscle ?? [...muscles].join(', ') ?? 'Not specified';
+        const secondary = (selected.secondary_muscles || []).join(', ') || 'Not specified';
+        
+        details.textContent = `Exercises: ${names || 'None'}. Primary muscle: ${primary || 'Not specified'}. Also active: ${secondary}.`;
       } catch (error) {
         if (activeVersion === version && request === currentRequest) details.textContent = `Could not load details: ${error.message}`;
       }
@@ -115,9 +121,11 @@ window.createDashboardView = (api) => {
     try {
       const { workouts } = await api('GET', '/api/workouts');
       if (activeVersion !== version) return;
-      for (const workout of [...workouts].reverse()) {
+      for (const workout of workouts) {
         const item = document.createElement('li');
-        item.textContent = `${workout.name} · ${workout.primary_muscle}`;
+        const exercises = `${workout.exerciseCount} exercise${workout.exerciseCount === 1 ? '' : 's'}`;
+        const sets = `${workout.setCount} set${workout.setCount === 1 ? '' : 's'}`;
+        item.textContent = `${workout.name} · ${exercises} · ${sets}`;
         history.appendChild(item);
       }
       historyStatus.textContent = workouts.length ? 'Shown in save order.' : 'No saved workouts yet.';

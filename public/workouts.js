@@ -31,7 +31,7 @@ window.createWorkoutView = (api, { daily = false, prefix = daily ? 'daily' : 'fe
     title.textContent = workout.name;
     const muscle = document.createElement('p');
     muscle.className = 'muted';
-    muscle.textContent = `Primary muscle: ${workout.primary_muscle}`;
+    muscle.textContent = `Primary muscle: ${workout.primary_muscle || 'Not specified'}`;
     info.append(title, muscle);
     const button = document.createElement('button');
     button.type = 'button';
@@ -53,14 +53,19 @@ window.createWorkoutView = (api, { daily = false, prefix = daily ? 'daily' : 'fe
       if (!opening) return;
       details.textContent = 'Loading lift…';
       try {
-        const { workout: selected } = await api('GET', `/api/workouts/${encodeURIComponent(workout.id)}`);
+        const data = await api('GET', `/api/workouts/${encodeURIComponent(workout.id)}`);
+        const selected = data.workout ?? data;
         if (version !== generation || currentRequest !== request) return;
+        const exercises = document.createElement('p');
+        exercises.textContent = `Exercises: ${(selected.exercises || []).map((e) => e.name).join(', ') || 'None'}`;
         const muscles = document.createElement('p');
-        muscles.textContent = `Also active: ${selected.secondary_muscles.join(', ')}`;
+        muscles.textContent = `Also active: ${(selected.secondary_muscles || []).join(', ') || 'Not specified'}`;
+        const setCount = (selected.exercises || []).reduce((n, e) => n + (e.sets || []).length, 0)
+          || (selected.sets || []).length;
         const sets = document.createElement('p');
         sets.className = 'muted';
-        sets.textContent = selected.sets.length ? `${selected.sets.length} sets recorded.` : 'No sets recorded.';
-        details.replaceChildren(muscles, sets);
+        sets.textContent = setCount ? `${setCount} sets recorded.` : 'No sets recorded.';
+        details.replaceChildren(exercises, muscles, sets);
       } catch (error) {
         if (version === generation && currentRequest === request) details.textContent = `Could not load lift: ${error.message}`;
       }

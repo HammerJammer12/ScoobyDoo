@@ -150,7 +150,8 @@
       btn.disabled = true;
       try {
         const { plan: saved } = await api('POST', '/api/recommendations/save', { name: nameInput.value.trim(), days: plan.days });
-        showMsg(msg, `Saved ${saved.templates.length} workouts: ${saved.templates.map((t) => t.name).join(', ')}.`, true);
+        showMsg(msg, `Saved ${saved.templates.length} workouts: ${saved.templates.map((t) => t.name).join(', ')}. `, true);
+        msg.append(el('a', { href: '/my-plans/', textContent: 'Go to My plans to start one' }));
       } catch (ex) {
         showMsg(msg, ex.message, false);
       } finally {

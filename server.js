@@ -186,6 +186,7 @@ app.get('/api/exercises', async (req, res) => {
   });
 });
 
+app.use('/api/templates', requireAuth, require('./routes/templates'));
 app.use('/api', require('./routes/recommendations')({ requireAuth }));
 
 app.use(express.static(path.join(__dirname, 'public')));

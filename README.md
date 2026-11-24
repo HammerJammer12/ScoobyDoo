@@ -83,6 +83,8 @@ Exercise data comes from [free-exercise-db](https://github.com/yuhonas/free-exer
 
 ### Recommendations
 
+The plan page at `/plan/` uses these endpoints: generate a preview, swap or remove exercises, then save.
+
 `POST /api/recommendations/plan` takes optional preferences:
 
 ```json
